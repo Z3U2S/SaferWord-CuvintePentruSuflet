@@ -11,6 +11,10 @@ let activeCommentPostId = null;
 let activeReportPostId = null;
 let likedPosts = new Set(JSON.parse(localStorage.getItem("likedPosts") || "[]"));
 
+let expandedPostId = null;
+let openCommentsPostId = null;
+let currentFilterAuthor = null;
+
 const DEFAULT_BADWORDS = [
   "pula", "pizda", "muie", "futu", "futut", "cacat", "rahat",
   "curva", "curvar", "dracului", "mortii", "nenorocit",
@@ -183,24 +187,25 @@ async function adaugaPost() {
   incarcaPostari();
 }
 
-async function likePost(id, btn) {
-  if (likedPosts.has(id)) {
-    likedPosts.delete(id);
+async function likePost(postId, btn) {
+  if (likedPosts.has(postId)) {
+    likedPosts.delete(postId);
     btn.classList.remove("liked");
   } else {
-    likedPosts.add(id);
+    likedPosts.add(postId);
     btn.classList.add("liked");
-    await supabaseClient.rpc("increment_likes", { row_id: id });
+    await supabaseClient.rpc("increment_likes", { row_id: postId });
   }
   localStorage.setItem("likedPosts", JSON.stringify([...likedPosts]));
-
-  // Actualizează doar numărul, fără reload complet
-  const { data } = await supabaseClient.from("posts").select("likes").eq("id", id).single();
-  if (data) btn.querySelector(".like-count").textContent = data.likes || 0;
+  const { data } = await supabaseClient.from("posts").select("likes").eq("id", postId).single();
+  if (data) {
+    btn.querySelector(".like-count").textContent = data.likes || 0;
+    const post = allPosts.find(p => p.id === postId);
+    if (post) post.likes = data.likes || 0;
+  }
 }
 
 async function editPost(id, title, content) {
-  // Refolosim modal-ul de comentarii cu un form de editare
   activeCommentPostId = id;
   const modal = document.getElementById("commentModal");
   document.getElementById("commentModalTitle").textContent = "Editează postarea";
@@ -214,7 +219,6 @@ async function editPost(id, title, content) {
   document.getElementById("commentForm").style.display = "none";
   document.getElementById("commentLoginMsg").style.display = "none";
 
-  // Schimbăm butonul Trimite cu Salvează
   const existingBtn = document.querySelector("#commentModal .btn-save-edit");
   if (existingBtn) existingBtn.remove();
   const saveBtn = document.createElement("button");
@@ -243,29 +247,144 @@ async function deletePost(id) {
   incarcaPostari();
 }
 
-// ===================== COMENTARII =====================
+// ===================== ACORDION =====================
 
-async function openComments(postId, postTitle) {
-  activeCommentPostId = postId;
-  document.getElementById("commentModalTitle").textContent = `💬 ${postTitle}`;
-
-  // Resetează modal
-  const saveBtn = document.querySelector(".btn-save-edit");
-  if (saveBtn) saveBtn.remove();
-
-  const list = document.getElementById("commentsList");
-  list.innerHTML = `<p class="comments-empty">Se încarcă...</p>`;
-
-  document.getElementById("commentForm").style.display = currentUser ? "flex" : "none";
-  document.getElementById("commentLoginMsg").style.display = currentUser ? "none" : "block";
-  document.getElementById("commentInput").value = "";
-
-  toggleModal("commentModal");
-  await loadComments(postId);
+function togglePost(id) {
+  expandedPostId = expandedPostId === id ? null : id;
+  if (expandedPostId !== id) openCommentsPostId = null;
+  renderPosts();
 }
 
-async function loadComments(postId) {
-  const list = document.getElementById("commentsList");
+function toggleCommentsInline(postId) {
+  openCommentsPostId = openCommentsPostId === postId ? null : postId;
+  renderPosts();
+  if (openCommentsPostId === postId) {
+    setTimeout(() => loadCommentsInline(postId), 0);
+  }
+}
+
+function filterByAuthor(author) {
+  currentFilterAuthor = author;
+  expandedPostId = null;
+  openCommentsPostId = null;
+  renderPosts();
+}
+
+function clearAuthorFilter() {
+  currentFilterAuthor = null;
+  expandedPostId = null;
+  openCommentsPostId = null;
+  renderPosts();
+}
+
+// ===================== RENDER =====================
+
+function renderPosts() {
+  const container = document.getElementById("posts");
+  container.innerHTML = "";
+
+  if (currentFilterAuthor) {
+    const banner = document.createElement("div");
+    banner.className = "author-banner";
+    banner.innerHTML = `
+      <span>📂 Resurse de: <strong>${currentFilterAuthor}</strong></span>
+      <button onclick="clearAuthorFilter()">✕ Toate resursele</button>
+    `;
+    container.appendChild(banner);
+  }
+
+  let list = currentFilterAuthor
+    ? allPosts.filter(p => p.author === currentFilterAuthor)
+    : allPosts;
+
+  if (!list || list.length === 0) {
+    const em = document.createElement("p");
+    em.className = "empty-msg";
+    em.textContent = "Nicio postare găsită.";
+    container.appendChild(em);
+    return;
+  }
+
+  list.forEach(p => {
+    const isExpanded = expandedPostId === p.id;
+    const isCommentsOpen = openCommentsPostId === p.id;
+    const isLiked = likedPosts.has(p.id);
+    const isOwner = currentUser && currentUser.id === p.user_id;
+    const canEdit = isOwner || isAdmin;
+    const safeTitle = p.title.replace(/`/g, "'");
+    const safeContent = p.content.replace(/`/g, "'");
+    const safeAuthor = (p.author || "Anonim").replace(/'/g, "&#39;");
+
+    const card = document.createElement("div");
+    card.className = "post-card" + (isExpanded ? " expanded" : "");
+
+    card.innerHTML = `
+      <div class="post-card-head" onclick="togglePost('${p.id}')">
+        <div class="post-card-left">
+          <span class="post-card-icon">${p.type === "cantec" ? "🎵" : "📜"}</span>
+          <div>
+            <div class="post-card-title">${p.title}</div>
+            <div class="post-card-author" onclick="event.stopPropagation(); filterByAuthor('${safeAuthor}')">
+              👤 ${p.author || "Anonim"}
+            </div>
+          </div>
+        </div>
+        <div class="post-card-right">
+          <span class="post-card-likes">❤️ ${p.likes || 0}</span>
+          <span class="post-card-chevron">${isExpanded ? "▲" : "▼"}</span>
+        </div>
+      </div>
+
+      ${isExpanded ? `
+        <div class="post-card-body">
+          <div class="post-card-content">${p.content}</div>
+
+          <div class="post-card-actions">
+            <button class="pca-btn pca-like ${isLiked ? "liked" : ""}" onclick="likePost('${p.id}', this)">
+              <span class="heart">❤️</span>
+              <span class="like-count">${p.likes || 0}</span>
+            </button>
+            <button class="pca-btn ${isCommentsOpen ? "pca-active" : ""}" onclick="toggleCommentsInline('${p.id}')">
+              💬 Comentarii
+            </button>
+            ${currentUser && !isOwner ? `<button class="pca-btn pca-report" onclick="openReport('${p.id}')">🚨 Raportează</button>` : ""}
+            ${canEdit ? `
+              <button class="pca-btn" onclick="editPost('${p.id}', \`${safeTitle}\`, \`${safeContent}\`)">✏️ Editează</button>
+              <button class="pca-btn pca-delete" onclick="deletePost('${p.id}')">🗑️ Șterge</button>
+            ` : ""}
+          </div>
+
+          ${isCommentsOpen ? `
+            <div class="inline-comments" id="inline-comments-${p.id}">
+              <div class="inline-comments-list" id="iclist-${p.id}">
+                <p class="comments-empty">Se încarcă...</p>
+              </div>
+              ${currentUser ? `
+                <div class="inline-comment-form">
+                  <textarea id="icinput-${p.id}" placeholder="Scrie un comentariu..."></textarea>
+                  <button class="pca-btn pca-send" onclick="submitCommentInline('${p.id}')">Trimite ↑</button>
+                </div>
+              ` : `
+                <p class="inline-login-msg">
+                  <a onclick="toggleModal('loginModal')">Loghează-te</a> pentru a comenta.
+                </p>
+              `}
+            </div>
+          ` : ""}
+        </div>
+      ` : ""}
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// ===================== COMENTARII INLINE =====================
+
+async function loadCommentsInline(postId) {
+  const list = document.getElementById(`iclist-${postId}`);
+  if (!list) return;
+
   const { data, error } = await supabaseClient
     .from("comments")
     .select("*")
@@ -282,10 +401,64 @@ async function loadComments(postId) {
     const div = document.createElement("div");
     div.className = "comment-item";
     const date = new Date(c.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
-    div.innerHTML = `
-      <div class="comment-meta">${date}</div>
-      ${c.content}
-    `;
+    div.innerHTML = `<div class="comment-meta">${date}</div>${c.content}`;
+    list.appendChild(div);
+  });
+}
+
+async function submitCommentInline(postId) {
+  const input = document.getElementById(`icinput-${postId}`);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return showToast("Scrie un comentariu!", "error");
+
+  const foundBad = containsBadWord(text);
+  if (foundBad) return showToast("Limbaj inadecvat detectat.", "error");
+
+  const { error } = await supabaseClient.from("comments").insert([{
+    post_id: postId,
+    content: text
+  }]);
+
+  if (error) return showToast("Eroare: " + error.message, "error");
+
+  input.value = "";
+  await loadCommentsInline(postId);
+  showToast("✅ Comentariu trimis!");
+}
+
+// ===================== COMENTARII MODAL (doar pentru editPost) =====================
+
+async function openComments(postId, postTitle) {
+  activeCommentPostId = postId;
+  document.getElementById("commentModalTitle").textContent = `💬 ${postTitle}`;
+  const saveBtn = document.querySelector(".btn-save-edit");
+  if (saveBtn) saveBtn.remove();
+  const list = document.getElementById("commentsList");
+  list.innerHTML = `<p class="comments-empty">Se încarcă...</p>`;
+  document.getElementById("commentForm").style.display = currentUser ? "flex" : "none";
+  document.getElementById("commentLoginMsg").style.display = currentUser ? "none" : "block";
+  document.getElementById("commentInput").value = "";
+  toggleModal("commentModal");
+  await loadComments(postId);
+}
+
+async function loadComments(postId) {
+  const list = document.getElementById("commentsList");
+  const { data, error } = await supabaseClient
+    .from("comments").select("*").eq("post_id", postId).order("created_at", { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    list.innerHTML = `<p class="comments-empty">Niciun comentariu încă. Fii primul! 🕊️</p>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  data.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "comment-item";
+    const date = new Date(c.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
+    div.innerHTML = `<div class="comment-meta">${date}</div>${c.content}`;
     list.appendChild(div);
   });
 }
@@ -293,17 +466,10 @@ async function loadComments(postId) {
 async function submitComment() {
   const text = document.getElementById("commentInput").value.trim();
   if (!text) return showToast("Scrie un comentariu!", "error");
-
   const foundBad = containsBadWord(text);
-  if (foundBad) return showToast(`Limbaj inadecvat detectat. Comentariul nu poate fi trimis.`, "error");
-
-  const { error } = await supabaseClient.from("comments").insert([{
-    post_id: activeCommentPostId,
-    content: text
-  }]);
-
+  if (foundBad) return showToast("Limbaj inadecvat detectat.", "error");
+  const { error } = await supabaseClient.from("comments").insert([{ post_id: activeCommentPostId, content: text }]);
   if (error) return showToast("Eroare: " + error.message, "error");
-
   document.getElementById("commentInput").value = "";
   await loadComments(activeCommentPostId);
   showToast("✅ Comentariu trimis!");
@@ -321,83 +487,52 @@ function openReport(postId) {
 async function submitReport() {
   const selected = document.querySelector('input[name="reportReason"]:checked');
   if (!selected) return showToast("Selectează un motiv!", "error");
-
   const extra = document.getElementById("reportExtra").value.trim();
   const reason = selected.value + (extra ? ` — ${extra}` : "");
-
   const { error } = await supabaseClient.from("reports").insert([{
-    post_id: activeReportPostId,
-    reason: reason,
-    reported_by: currentUser ? currentUser.id : null
+    post_id: activeReportPostId, reason, reported_by: currentUser ? currentUser.id : null
   }]);
-
   if (error) return showToast("Eroare: " + error.message, "error");
-
   toggleModal("reportModal");
   showToast("✅ Raportul a fost trimis. Mulțumim!");
 }
 
-// ===================== DISPLAY POSTS =====================
-
-async function afiseazaLista(data) {
-  const container = document.getElementById("posts");
-  container.innerHTML = "";
-
-  if (!data || data.length === 0) {
-    container.innerHTML = `<p class="empty-msg">Nicio postare găsită.</p>`;
-    return;
-  }
-
-  data.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "post";
-
-    const isOwner = currentUser && currentUser.id === p.user_id;
-    const canEdit = isOwner || isAdmin;
-    const isLiked = likedPosts.has(p.id);
-
-    div.innerHTML = `
-      <h3>${p.title}</h3>
-      <small>✍️ ${p.author || "Anonim"} • ${p.type}</small>
-      <p>${p.content}</p>
-      <div class="post-actions">
-        <button class="btn-like ${isLiked ? 'liked' : ''}" onclick="likePost('${p.id}', this)">
-          <span class="heart">❤️</span>
-          <span class="like-count">${p.likes || 0}</span>
-        </button>
-        <button onclick="openComments('${p.id}', \`${p.title.replace(/`/g, "'")}\`)">💬 Comentarii</button>
-        ${currentUser && !isOwner ? `<button class="btn-report" onclick="openReport('${p.id}')">🚨 Raportează</button>` : ""}
-        ${canEdit ? `
-          <button onclick="editPost('${p.id}', \`${p.title.replace(/`/g, "'")}\`, \`${p.content.replace(/`/g, "'")}\`)">✏️ Editează</button>
-          <button class="btn-delete" onclick="deletePost('${p.id}')">🗑️ Șterge</button>
-        ` : ""}
-      </div>
-    `;
-
-    container.appendChild(div);
-  });
-}
+// ===================== ÎNCĂRCARE =====================
 
 async function incarcaPostari() {
-  const { data } = await supabaseClient
-    .from("posts").select("*").order("created_at", { ascending: false });
+  const { data } = await supabaseClient.from("posts").select("*").order("created_at", { ascending: false });
   allPosts = data || [];
-  afiseazaLista(allPosts);
+  currentFilterAuthor = null;
+  expandedPostId = null;
+  openCommentsPostId = null;
+  renderPosts();
 }
 
 function searchPosts() {
   const val = document.getElementById("search").value.toLowerCase();
+  if (!val) { renderPosts(); return; }
   const filtered = allPosts.filter(p =>
     p.title.toLowerCase().includes(val) || p.content.toLowerCase().includes(val)
   );
-  afiseazaLista(filtered);
+  const saved = allPosts;
+  allPosts = filtered;
+  renderPosts();
+  allPosts = saved;
 }
 
-function incarcaToate() { incarcaPostari(); }
-function incarcaPoezii() { afiseazaLista(allPosts.filter(p => p.type === "poezie")); }
-function incarcaCantece() { afiseazaLista(allPosts.filter(p => p.type === "cantec")); }
+function incarcaToate() { currentFilterAuthor = null; expandedPostId = null; openCommentsPostId = null; incarcaPostari(); }
+function incarcaPoezii() {
+  currentFilterAuthor = null; expandedPostId = null; openCommentsPostId = null;
+  const f = allPosts.filter(p => p.type === "poezie");
+  const s = allPosts; allPosts = f; renderPosts(); allPosts = s;
+}
+function incarcaCantece() {
+  currentFilterAuthor = null; expandedPostId = null; openCommentsPostId = null;
+  const f = allPosts.filter(p => p.type === "cantec");
+  const s = allPosts; allPosts = f; renderPosts(); allPosts = s;
+}
 
-// ===================== ADMIN PANEL =====================
+// ===================== ADMIN =====================
 
 function toggleAdminPanel() {
   const panel = document.getElementById("adminPanel");
@@ -417,17 +552,12 @@ function switchTab(tab) {
 async function loadReported() {
   const container = document.getElementById("reportedList");
   container.innerHTML = `<p class="empty-msg">Se încarcă...</p>`;
-
   const { data, error } = await supabaseClient
-    .from("reports")
-    .select("*, posts(title, content, author)")
-    .order("created_at", { ascending: false });
-
+    .from("reports").select("*, posts(title, content, author)").order("created_at", { ascending: false });
   if (error || !data || data.length === 0) {
     container.innerHTML = `<p class="empty-msg">✅ Nicio postare raportată momentan.</p>`;
     return;
   }
-
   container.innerHTML = "";
   data.forEach(r => {
     const post = r.posts;
@@ -464,11 +594,7 @@ async function deletePostAdmin(postId, reportId) {
 function loadBadwords() {
   const container = document.getElementById("badwordsList");
   container.innerHTML = `<div class="badword-tags">` +
-    badWords.map(w => `
-      <span class="badword-tag">${w}
-        <button onclick="removeBadword('${w}')">✕</button>
-      </span>
-    `).join("") +
+    badWords.map(w => `<span class="badword-tag">${w}<button onclick="removeBadword('${w}')">✕</button></span>`).join("") +
   `</div>`;
 }
 
