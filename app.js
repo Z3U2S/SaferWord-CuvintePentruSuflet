@@ -12,6 +12,7 @@ let activeReaderPostId = null;
 let likedPosts = new Set(JSON.parse(localStorage.getItem("likedPosts") || "[]"));
 let currentFontSize = 18;
 let currentReaderTheme = localStorage.getItem("readerTheme") || "light";
+let currentFilter = "all"; // "all", "poems", "songs"
 
 const DEFAULT_BADWORDS = [
   "pula", "pizda", "muie", "futu", "futut", "cacat", "rahat",
@@ -400,15 +401,35 @@ function searchPosts() {
 
 function showHome() {
   document.getElementById("search").value = "";
+  currentFilter = "all";
+  updateDashboard();
   afiseazaLista(allPosts);
 }
 
 function showPoems() {
-  afiseazaLista(allPosts.filter(p => p.type === "poezie"));
+  currentFilter = "poems";
+  const poems = allPosts.filter(p => p.type === "poezie");
+  updateDashboardFiltered(poems);
+  afiseazaLista(poems);
 }
 
 function showSongs() {
-  afiseazaLista(allPosts.filter(p => p.type === "cantec"));
+  currentFilter = "songs";
+  const songs = allPosts.filter(p => p.type === "cantec");
+  updateDashboardFiltered(songs);
+  afiseazaLista(songs);
+}
+
+function updateDashboardFiltered(data) {
+  const total = data.length;
+  const authors = new Set(data.map(p => p.user_id)).size;
+  const poems = data.filter(p => p.type === "poezie").length;
+  const songs = data.filter(p => p.type === "cantec").length;
+
+  document.getElementById("totalPosts").textContent = total;
+  document.getElementById("totalAuthors").textContent = authors;
+  document.getElementById("totalPoems").textContent = poems;
+  document.getElementById("totalSongs").textContent = songs;
 }
 
 // ===================== DISPLAY POSTS =====================
@@ -480,7 +501,14 @@ async function afiseazaLista(data) {
 async function openAuthorModal(userId, authorName, event) {
   event.stopPropagation();
   const profile = await loadUserProfile(userId);
-  const authorPosts = allPosts.filter(p => p.user_id === userId);
+  
+  // Filtrează resursele după filtrul activ
+  let authorPosts = allPosts.filter(p => p.user_id === userId);
+  if (currentFilter === "poems") {
+    authorPosts = authorPosts.filter(p => p.type === "poezie");
+  } else if (currentFilter === "songs") {
+    authorPosts = authorPosts.filter(p => p.type === "cantec");
+  }
 
   const initials = authorName.split(" ").map(n => n[0]).join("").toUpperCase();
 
@@ -496,8 +524,8 @@ async function openAuthorModal(userId, authorName, event) {
         </div>
       </div>
       <div class="author-resources">
-        <h4>Resursele autorului (${authorPosts.length})</h4>
-        ${authorPosts.map(p => `
+        <h4>${currentFilter === "poems" ? "Poeziile" : currentFilter === "songs" ? "Cântecele" : "Resursele"} autorului (${authorPosts.length})</h4>
+        ${authorPosts.length === 0 ? `<p style="opacity: 0.6; font-size: 13px;">Niciun ${currentFilter === "poems" ? "poem" : currentFilter === "songs" ? "cântec" : "resursă"} în acest filtru</p>` : authorPosts.map(p => `
           <div class="resource-item" onclick="openReader('${p.id}', event)">
             <span class="resource-item-type">${p.type === "poezie" ? "📜" : "🎵"}</span>
             <strong>${p.title}</strong>
@@ -521,39 +549,227 @@ async function openReader(postId, event) {
   if (!post) return;
 
   activeReaderPostId = postId;
-  currentFontSize = 18;
 
   document.getElementById("readerTitle").textContent = post.title;
   document.getElementById("readerMeta").textContent = `Autor: ${post.author} • ${formatDate(post.created_at_display)} • ${post.type === "poezie" ? "Poezie" : "Cântec"}`;
 
+  // Parse content - grupează versurile în strofe
+  const lines = post.content.split('\n');
+  let strophes = [];
+  let currentStrophe = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === "") {
+      if (currentStrophe.length > 0) {
+        strophes.push(currentStrophe);
+        currentStrophe = [];
+      }
+    } else {
+      currentStrophe.push(lines[i]);
+    }
+  }
+  if (currentStrophe.length > 0) {
+    strophes.push(currentStrophe);
+  }
+  
   const contentHTML = `
-    ${post.content.split('\n').map(p => `<p>${p}</p>`).join("")}
+    ${strophes.map(strophe => {
+      return `<div class="strophe">${strophe.map(line => `<p>${line}</p>`).join("")}</div>`;
+    }).join("")}
     ${post.creation_story ? `<div class="reader-story"><strong>📖 Povestea creației:</strong><br>${post.creation_story}</div>` : ""}
   `;
 
   document.getElementById("readerContent").innerHTML = contentHTML;
-  document.getElementById("fontSizeSlider").value = 18;
-  document.getElementById("fontSizeValue").textContent = 18;
+  
+  // Setează font size din localStorage sau default
+  const savedFontSize = localStorage.getItem("lastFontSize") || "18";
+  const slider = document.getElementById("fontSizeSlider");
+  const valueDisplay = document.getElementById("fontSizeValue");
+  const content = document.getElementById("readerContent");
+  
+  if (slider) {
+    slider.value = savedFontSize;
+    slider.disabled = false;
+  }
+  if (valueDisplay) valueDisplay.textContent = savedFontSize;
+  if (content) {
+    content.style.setProperty("font-size", savedFontSize + "px", "important");
+  }
   
   // Setează tema din localStorage
   setReaderTheme(currentReaderTheme);
   
-  // Fix slider - remove old listeners and add new
-  const slider = document.getElementById("fontSizeSlider");
-  slider.removeEventListener("input", changeFontSize);
-  slider.addEventListener("input", changeFontSize);
+  // Arată buton edit dacă e author
+  const editBtn = document.getElementById("editReaderBtn");
+  if (currentUser && currentUser.id === post.user_id) {
+    editBtn.style.display = "inline-block";
+  } else {
+    editBtn.style.display = "none";
+  }
   
-  // Aplică font size la content
-  document.getElementById("readerContent").style.fontSize = "18px";
+  // Reset bold
+  document.getElementById("readerContent").classList.remove("bold-text");
+  document.getElementById("boldToggleBtn").style.opacity = "0.6";
 
   toggleModal("readerModal");
 }
 
 function changeFontSize() {
-  const value = document.getElementById("fontSizeSlider").value;
-  document.getElementById("fontSizeValue").textContent = value;
-  document.getElementById("readerContent").style.fontSize = value + "px";
-  currentFontSize = value;
+  try {
+    const slider = document.getElementById("fontSizeSlider");
+    const value = slider ? slider.value : "18";
+    
+    const displayValue = document.getElementById("fontSizeValue");
+    if (displayValue) displayValue.textContent = value;
+    
+    const content = document.getElementById("readerContent");
+    if (content) {
+      // Force override cu !important direct pe element
+      content.style.setProperty("font-size", value + "px", "important");
+      console.log("Font size ACTUALLY changed to:", value + "px");
+    }
+    
+    currentFontSize = value;
+    localStorage.setItem("lastFontSize", value);
+  } catch (err) {
+    console.error("Error changing font size:", err);
+  }
+}
+
+function toggleBoldText() {
+  const content = document.getElementById("readerContent");
+  const btn = document.getElementById("boldToggleBtn");
+  
+  content.classList.toggle("bold-text");
+  btn.style.opacity = content.classList.contains("bold-text") ? "1" : "0.6";
+}
+
+async function printResourcePDF() {
+  const post = allPosts.find(p => p.id === activeReaderPostId);
+  if (!post) return showToast("Eroare!", "error");
+  
+  // Parse content același ca în reader
+  const lines = post.content.split('\n');
+  let strophes = [];
+  let currentStrophe = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === "") {
+      if (currentStrophe.length > 0) {
+        strophes.push(currentStrophe);
+        currentStrophe = [];
+      }
+    } else {
+      currentStrophe.push(lines[i]);
+    }
+  }
+  if (currentStrophe.length > 0) {
+    strophes.push(currentStrophe);
+  }
+  
+  // Crează HTML pentru print cu format frumos
+  const printWindow = window.open("", "", "height=900,width=900");
+  const strophesHTML = strophes.map(strophe => {
+    return `<div style="margin-bottom: 20px;">
+      ${strophe.map(line => `<p style="margin: 0; padding: 0; line-height: 1.8;">${line}</p>`).join("")}
+    </div>`;
+  }).join("");
+  
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${post.title}</title>
+      <style>
+        body {
+          font-family: 'Georgia', serif;
+          max-width: 800px;
+          margin: 40px;
+          line-height: 1.8;
+          color: #333;
+        }
+        h1 { 
+          font-size: 28px; 
+          margin-bottom: 10px;
+          font-weight: bold;
+        }
+        .meta { 
+          color: #999; 
+          font-size: 13px; 
+          margin-bottom: 30px;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 15px;
+        }
+        .content {
+          margin: 30px 0;
+        }
+        .strophe {
+          margin-bottom: 20px;
+        }
+        .strophe p {
+          margin: 0;
+          padding: 0;
+          line-height: 1.8;
+        }
+        .story { 
+          background: #f5f5f5; 
+          padding: 15px; 
+          margin: 30px 0; 
+          font-style: italic; 
+          border-left: 3px solid #666;
+          font-size: 14px;
+        }
+        .footer {
+          margin-top: 40px;
+          border-top: 1px solid #ccc;
+          padding-top: 15px;
+          text-align: center;
+          color: #999;
+          font-size: 12px;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${post.title}</h1>
+      <div class="meta">
+        <p><strong>Autor:</strong> ${post.author}</p>
+        <p><strong>Data:</strong> ${formatDate(post.created_at_display)}</p>
+        <p><strong>Tip:</strong> ${post.type === "poezie" ? "Poezie" : "Cântec"}</p>
+      </div>
+      <div class="content">
+        ${strophesHTML}
+      </div>
+      ${post.creation_story ? `<div class="story"><strong>📖 Povestea creației:</strong><br>${post.creation_story}</div>` : ""}
+      <div class="footer">
+        <p>Publicat pe SaferWord - Resursa ta pentru suflet</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  
+  setTimeout(() => {
+    printWindow.print();
+  }, 250);
+  
+  showToast("📄 Se pregătește PDF-ul...");
+}
+
+function openEditFromReader() {
+  if (!activeReaderPostId) return;
+  const post = allPosts.find(p => p.id === activeReaderPostId);
+  if (!post) return;
+  
+  document.getElementById("editResourceId").value = post.id;
+  document.getElementById("editResourceTitle").value = post.title;
+  document.getElementById("editResourceContent").value = post.content;
+  document.getElementById("editResourceType").value = post.type;
+  document.getElementById("editResourceStory").value = post.creation_story || "";
+  
+  toggleModal("readerModal");
+  toggleModal("editResourceModal");
 }
 
 function setReaderTheme(theme) {
@@ -752,9 +968,9 @@ function showMyResources() {
             <span class="pile-type">${p.type === "poezie" ? "📜 Poezie" : "🎵 Cântec"}</span>
             <p>${p.content.substring(0, 60)}...</p>
           </div>
-          <div class="pile-actions" style="gap: 4px;">
-            <button onclick="editMyResource('${p.id}', '${p.title.replace(/'/g, "\\'")}', '${p.content.replace(/'/g, "\\'")}', '${p.type}', '${(p.creation_story || "").replace(/'/g, "\\'")}', event)" style="background: rgba(100,200,255,0.12) !important; color: #64c8ff !important; border-color: rgba(100,200,255,0.3) !important; font-size: 11px; padding: 4px 8px;">✏️</button>
-            <button onclick="deleteMyResource('${p.id}', event)" style="background: rgba(255,80,80,0.12) !important; color: #ff8080 !important; border-color: rgba(255,80,80,0.3) !important; font-size: 11px; padding: 4px 8px;">🗑️</button>
+          <div class="pile-actions" style="gap: 4px; display: flex; flex-direction: column;">
+            <button onclick="openEditResourceModal('${p.id}')" style="background: rgba(100,200,255,0.12) !important; color: #64c8ff !important; border-color: rgba(100,200,255,0.3) !important; font-size: 11px; padding: 4px 8px; border: 1px solid rgba(100,200,255,0.3); border-radius: 6px; background: rgba(100,200,255,0.12); cursor: pointer;">✏️ Edit</button>
+            <button onclick="deleteMyResourceConfirm('${p.id}')" style="background: rgba(255,80,80,0.12) !important; color: #ff8080 !important; border-color: rgba(255,80,80,0.3) !important; font-size: 11px; padding: 4px 8px; border: 1px solid rgba(255,80,80,0.3); border-radius: 6px; background: rgba(255,80,80,0.12); cursor: pointer;">🗑️ Del</button>
           </div>
         </div>
       `).join("")}
@@ -762,6 +978,37 @@ function showMyResources() {
   `;
   grid.appendChild(pile);
   container.appendChild(grid);
+}
+
+function openEditResourceModal(postId) {
+  const post = allPosts.find(p => p.id === postId);
+  if (!post) return;
+  
+  document.getElementById("editResourceId").value = postId;
+  document.getElementById("editResourceTitle").value = post.title;
+  document.getElementById("editResourceContent").value = post.content;
+  document.getElementById("editResourceType").value = post.type;
+  document.getElementById("editResourceStory").value = post.creation_story || "";
+  
+  toggleModal("editResourceModal");
+}
+
+function deleteMyResourceConfirm(postId) {
+  // Modal frumos pentru confirmare
+  document.getElementById("deleteConfirmPostId").value = postId;
+  const post = allPosts.find(p => p.id === postId);
+  document.getElementById("deleteConfirmTitle").textContent = post ? post.title : "Resursa";
+  toggleModal("deleteConfirmModal");
+}
+
+async function confirmDeleteResource() {
+  const postId = document.getElementById("deleteConfirmPostId").value;
+  toggleModal("deleteConfirmModal");
+  await deleteMyResource(postId);
+}
+
+function cancelDeleteResource() {
+  toggleModal("deleteConfirmModal");
 }
 
 async function editMyResource(postId, title, content, type, creationStory, event) {
@@ -808,20 +1055,26 @@ async function saveEditedResource() {
   showMyResources();
 }
 
-async function deleteMyResource(postId, event) {
-  event.stopPropagation();
-  const confirmDelete = confirm("⚠️ ATENȚIE!\n\nSigur vrei să ștergi această resursă?\n\nAceastă acțiune NU se poate anula!");
-  if (!confirmDelete) return;
-  
-  const { error } = await supabaseClient
-    .from("posts")
-    .delete()
-    .eq("id", postId);
-  
-  if (error) return showToast("Eroare la ștergere!", "error");
-  showToast("✅ Resursă ștearsă!");
-  await incarcaPostari();
-  showMyResources();
+async function deleteMyResource(postId) {
+  try {
+    const { error } = await supabaseClient
+      .from("posts")
+      .delete()
+      .eq("id", postId)
+      .eq("user_id", currentUser.id); // Extra safety: delete only own posts
+    
+    if (error) {
+      console.error("Delete error:", error);
+      return showToast("❌ Nu poți șterge această resursă! " + error.message, "error");
+    }
+    
+    showToast("✅ Resursă ștearsă!");
+    await incarcaPostari();
+    showMyResources();
+  } catch (err) {
+    console.error("Delete exception:", err);
+    showToast("❌ Eroare la ștergere: " + err.message, "error");
+  }
 }
 
 // ===================== ADMIN - RESURSE =====================

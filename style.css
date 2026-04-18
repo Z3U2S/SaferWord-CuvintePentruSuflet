@@ -307,10 +307,28 @@ body {
 .theme-dark #fontSizeValue { color: #ffd700; }
 .theme-green #fontSizeValue { color: #2d5a2d; }
 
-.reader-theme-control {
+.reader-text-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.reader-content.bold-text {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.reader-content.bold-text p {
+  font-weight: 600;
+}
+
+.reader-content.bold-text strong {
+  font-weight: 800;
+}
+
+.reader-content.bold-text em {
+  font-style: italic;
+  font-weight: 600;
 }
 
 .reader-theme-control label {
@@ -361,15 +379,30 @@ body {
   line-height: 1.9;
   text-align: justify;
   transition: color 0.2s, background 0.2s;
+  font-style: normal;
+  color: #1a1a1a;
 }
 
 .reader-content p {
-  margin: 0 0 18px;
-  text-indent: 1.5em;
+  margin: 0 !important;
+  text-indent: 0 !important;
+  line-height: 1.9 !important;
+  font-size: inherit !important;
 }
 
 .reader-content p:first-child {
-  text-indent: 0;
+  text-indent: 0 !important;
+}
+
+.strophe {
+  margin-bottom: 24px !important;
+}
+
+.strophe p {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  line-height: 1.9 !important;
 }
 
 .reader-story {

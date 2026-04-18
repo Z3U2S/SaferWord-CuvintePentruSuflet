@@ -109,7 +109,7 @@
       <div class="reader-toolbar">
         <div class="reader-font-control">
           <label>Mărimea text:</label>
-          <input type="range" id="fontSizeSlider" min="14" max="26" value="18" step="1" />
+          <input type="range" id="fontSizeSlider" min="14" max="26" value="18" step="1" oninput="changeFontSize()" />
           <span id="fontSizeValue">18</span>px
         </div>
         <div class="reader-theme-control">
@@ -118,6 +118,11 @@
           <button class="theme-btn" onclick="setReaderTheme('sepia')" title="Sepia">🟫</button>
           <button class="theme-btn" onclick="setReaderTheme('dark')" title="Dark">🌙</button>
           <button class="theme-btn" onclick="setReaderTheme('green')" title="Green">🌿</button>
+        </div>
+        <div class="reader-text-control">
+          <button id="boldToggleBtn" class="theme-btn" onclick="toggleBoldText()" title="Îngroșat">𝐁</button>
+          <button class="theme-btn" onclick="printResourcePDF()" title="Print PDF">🖨️</button>
+          <button id="editReaderBtn" class="theme-btn" onclick="openEditFromReader()" style="display:none;" title="Editează">✏️</button>
         </div>
       </div>
     </div>
@@ -171,6 +176,20 @@
     </select>
     <textarea id="editResourceStory" placeholder="Povestea creației (opțional)..."></textarea>
     <button class="btn-primary" onclick="saveEditedResource()">Salvează modificări</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMARE ȘTERGERE -->
+<div class="modal-overlay" id="deleteConfirmModal" onclick="closeModalOutside(event, 'deleteConfirmModal')">
+  <div class="modal-box">
+    <h2 style="color: #ff4444;">⚠️ Atenție!</h2>
+    <p style="color: #333; font-size: 15px; line-height: 1.6;">Sigur vrei să ștergi "<strong id="deleteConfirmTitle"></strong>"?</p>
+    <p style="color: #888; font-size: 13px;">Această acțiune NU se poate anula.</p>
+    <input type="hidden" id="deleteConfirmPostId" />
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <button class="btn-primary" style="background: #ff4444; flex: 1;" onclick="confirmDeleteResource()">Șterge</button>
+      <button class="btn-primary" style="background: #999; flex: 1;" onclick="cancelDeleteResource()">Anulează</button>
+    </div>
   </div>
 </div>
 
