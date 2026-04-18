@@ -1,130 +1,322 @@
-<!DOCTYPE html>
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SaferWord</title>
 <link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div class="background"></div>
+<!-- Animated blobs background -->
 
-<!-- NAVBAR -->
-<div class="navbar">
-  <div class="navbar-brand">✝ SaferWord</div>
-  <div class="navbar-right">
-    <span id="userDisplay"></span>
-    <button class="btn-admin-nav" id="adminNavBtn" onclick="toggleAdminPanel()" style="display:none;">⚙️ Admin</button>
-    <button class="btn-login-nav" id="loginNavBtn" onclick="toggleModal('loginModal')">Login</button>
-    <button class="btn-logout-nav" id="logoutNavBtn" onclick="logout()" style="display:none;">Logout</button>
-  </div>
-</div>
-
-<!-- MODAL LOGIN -->
-<div class="modal-overlay" id="loginModal" onclick="closeModalOutside(event, 'loginModal')">
-  <div class="modal-box">
-    <button class="modal-close" onclick="toggleModal('loginModal')">✕</button>
-    <h2 id="modalTitle">Conectează-te</h2>
-    <p id="modalSubtitle">Bine ai revenit în comunitate</p>
-    <input id="loginEmail" type="email" placeholder="Email" />
-    <input id="loginPassword" type="password" placeholder="Parolă" />
-    <button class="btn-primary" onclick="loginEmail()">Intră cu email</button>
-    <div class="modal-divider"><span>sau</span></div>
-    <button class="btn-google" onclick="loginGoogle()">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Continuă cu Google
-    </button>
-    <p class="modal-toggle" onclick="toggleRegisterMode()">
-      <span id="toggleText">Nu ai cont? Înregistrează-te</span>
-    </p>
-  </div>
-</div>
-
-<!-- MODAL COMENTARII -->
-<div class="modal-overlay" id="commentModal" onclick="closeModalOutside(event, 'commentModal')">
-  <div class="modal-box modal-box--wide">
-    <button class="modal-close" onclick="toggleModal('commentModal')">✕</button>
-    <h2 id="commentModalTitle">Comentarii</h2>
-    <div id="commentsList" class="comments-list"></div>
-    <div class="comment-form" id="commentForm" style="display:none;">
-      <textarea id="commentInput" placeholder="Scrie un comentariu..."></textarea>
-      <button class="btn-primary" onclick="submitComment()">Trimite</button>
-    </div>
-    <p class="comment-login-msg" id="commentLoginMsg" style="display:none;">
-      <a onclick="toggleModal('commentModal'); toggleModal('loginModal')">Loghează-te</a> pentru a comenta.
-    </p>
-  </div>
-</div>
-
-<!-- MODAL RAPORTARE -->
-<div class="modal-overlay" id="reportModal" onclick="closeModalOutside(event, 'reportModal')">
-  <div class="modal-box">
-    <button class="modal-close" onclick="toggleModal('reportModal')">✕</button>
-    <h2>Raportează postarea</h2>
-    <p style="font-size:13px; color:#888; margin:0 0 8px;">Spune-ne de ce raportezi această postare:</p>
-    <div class="report-options">
-      <label><input type="radio" name="reportReason" value="Limbaj inadecvat"> Limbaj inadecvat</label>
-      <label><input type="radio" name="reportReason" value="Conținut fals"> Conținut fals</label>
-      <label><input type="radio" name="reportReason" value="Spam"> Spam</label>
-      <label><input type="radio" name="reportReason" value="Alt motiv"> Alt motiv</label>
-    </div>
-    <textarea id="reportExtra" placeholder="Detalii suplimentare (opțional)..."></textarea>
-    <button class="btn-primary" onclick="submitReport()">Trimite raportul</button>
-  </div>
+<div class="bg-scene">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+  <div class="noise"></div>
 </div>
 
 <div class="container">
-  <div class="branding">
-    <h1>Resursa ta pentru suflet</h1>
-    <p>Cântece și Poezii Creștine</p>
-  </div>
 
-  <!-- PANOU ADMIN -->
-  <div class="admin-panel" id="adminPanel" style="display:none;">
-    <div class="admin-header">
-      <h2>⚙️ Panou Admin</h2>
-      <div class="admin-tabs">
-        <button class="tab-btn active" onclick="switchTab('reported')">🚨 Raportate</button>
-        <button class="tab-btn" onclick="switchTab('badwords')">🚫 Cuvinte interzise</button>
+  <!-- Header -->
+
+  <header class="header-glass">
+    <div class="brand">
+      <span class="brand-icon">✦</span>
+      <div>
+        <h1>SaferWord</h1>
+        <p>Resursa ta pentru suflet</p>
       </div>
     </div>
-    <div id="tab-reported">
-      <div id="reportedList"><p class="empty-msg">Se încarcă...</p></div>
-    </div>
-    <div id="tab-badwords" style="display:none;">
-      <div class="badword-add">
-        <input id="newBadword" placeholder="Adaugă cuvânt interzis..." />
-        <button onclick="addBadword()">Adaugă</button>
+    <div class="header-actions">
+      <div id="userDisplay" class="user-chip" onclick="toggleProfile()">
+        <div class="user-avatar" id="headerAvatar">?</div>
+        <span id="headerEmail">Anonim</span>
       </div>
-      <div id="badwordsList"></div>
     </div>
+  </header>
+
+  <!-- Nav -->
+
+  <nav class="nav-glass">
+    <button class="nav-btn active" onclick="setNav(this, 'toate')">
+      <span class="nav-icon">🏠</span> Home
+    </button>
+    <button class="nav-btn" onclick="setNav(this, 'poezii')">
+      <span class="nav-icon">📜</span> Poezii
+    </button>
+    <button class="nav-btn" onclick="setNav(this, 'cantece')">
+      <span class="nav-icon">🎵</span> Cântece
+    </button>
+    <button class="nav-btn" onclick="setNav(this, 'termeni')">
+      <span class="nav-icon">⚖️</span> Termeni
+    </button>
+    <button class="nav-btn accent" onclick="toggleForm()">
+      <span class="nav-icon">✦</span> Adaugă
+    </button>
+  </nav>
+
+  <!-- Search -->
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="search" class="search-input" placeholder="Caută titlu sau conținut..." oninput="searchPosts()">
   </div>
 
-  <div class="menu">
-    <button onclick="incarcaToate()">🏠 Home</button>
-    <button onclick="incarcaPoezii()">📜 Poezii</button>
-    <button onclick="incarcaCantece()">🎵 Cântece</button>
-  </div>
+  <!-- ═══ WIDGETS HOMEPAGE ═══ -->
 
-  <input id="search" placeholder="🔍 Caută..." oninput="searchPosts()">
+  <div id="homepageWidgets">
 
-  <div class="glass" id="formSection" style="display:none;">
-    <input id="title" placeholder="Titlu" />
-    <input id="author" placeholder="Autor" />
-    <textarea id="content" placeholder="Scrie aici..."></textarea>
-    <select id="type">
-      <option value="poezie">Poezie</option>
-      <option value="cantec">Cântec</option>
-    </select>
-    <button onclick="adaugaPost()">Publică</button>
-  </div>
-
-  <div id="posts"></div>
+```
+<!-- Verset biblic zilnic -->
+<div class="widget-card verse-card">
+  <div class="verse-label">✦ Verset zilnic</div>
+  <blockquote id="verseText" class="verse-text">Se încarcă...</blockquote>
+  <cite id="verseRef" class="verse-ref"></cite>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="app.js"></script>
+<!-- Grid: Ultimele resurse + Top utilizatori -->
+<div class="widgets-grid">
+
+  <!-- Ultimele resurse -->
+  <div class="widget-card">
+    <div class="widget-title">🕐 Ultimele adăugate</div>
+    <div id="latestList" class="widget-list">
+      <div class="widget-loading">Se încarcă...</div>
+    </div>
+  </div>
+
+  <!-- Top utilizatori -->
+  <div class="widget-card">
+    <div class="widget-title">🏆 Top contributori</div>
+    <div id="topList" class="widget-list">
+      <div class="widget-loading">Se încarcă...</div>
+    </div>
+  </div>
+
+</div>
+```
+
+  </div>
+  <!-- ═══ END WIDGETS ═══ -->
+
+  <!-- Add Form -->
+
+  <div class="glass-panel form-panel" id="formSection" style="display:none;">
+    <h2 class="panel-title">✦ Publică o resursă</h2>
+    <div class="form-grid">
+      <input id="title" class="field" placeholder="Titlu resursă">
+      <input id="author" class="field" placeholder="Autor (opțional)">
+      <textarea id="content" class="field" placeholder="Scrie textul complet..." rows="6"></textarea>
+      <select id="type" class="field">
+        <option value="poezie">📜 Poezie</option>
+        <option value="cantec">🎵 Cântec</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="adaugaPost()">✦ Publică</button>
+      <button class="btn-secondary" onclick="toggleForm()">Anulează</button>
+    </div>
+  </div>
+
+  <!-- Auth Panel -->
+
+  <div class="glass-panel auth-panel" id="authPanel" style="display:none;">
+    <h2 class="panel-title">Cont</h2>
+    <div id="authContent">
+      <button class="btn-google" onclick="loginGoogle()">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continuă cu Google
+      </button>
+    </div>
+    <div id="profileContent" style="display:none;">
+      <div class="profile-avatar-wrap">
+        <img id="profileImg" src="" alt="" class="profile-img" style="display:none;">
+        <div id="profileInitial" class="profile-initial">?</div>
+        <label class="avatar-upload-btn">
+          📷
+          <input type="file" accept="image/*" onchange="uploadAvatar(this)" style="display:none;">
+        </label>
+      </div>
+      <div class="profile-fields">
+        <input id="profileNume" class="field" placeholder="Nume afișat">
+        <input id="profileLocatie" class="field" placeholder="📍 Locație (oraș, țară)">
+        <select id="profileSex" class="field">
+          <option value="">Sex (opțional)</option>
+          <option value="masculin">Masculin</option>
+          <option value="feminin">Feminin</option>
+          <option value="altul">Prefer să nu spun</option>
+        </select>
+        <textarea id="profileBio" class="field" placeholder="Câteva cuvinte despre tine..." rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="salveazaProfil()">💾 Salvează profilul</button>
+        <button class="btn-secondary" onclick="logout()">Deconectează-te</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legal / Termeni -->
+
+  <div class="glass-panel legal-panel" id="legalSection" style="display:none;">
+    <h2 class="panel-title">⚖️ Termeni & Condiții</h2>
+
+```
+<div class="legal-block">
+  <h3>1. Despre SaferWord</h3>
+  <p>SaferWord este o platformă comunitară dedicată distribuirii de poezii și cântece creștine. Scopul nostru este să oferim un spațiu digital de inspirație spirituală, gratuit și accesibil tuturor.</p>
+</div>
+
+<div class="legal-block">
+  <h3>2. Drepturi de autor & Copyright ⚠️</h3>
+  <p><strong>Utilizatorii sunt singurii responsabili</strong> pentru conținutul pe care îl publică pe platformă.</p>
+  <ul>
+    <li>Prin publicarea unei resurse, declari că deții drepturile necesare sau că materialul este în domeniu public.</li>
+    <li>SaferWord nu revendică dreptul de proprietate asupra niciunui conținut publicat de utilizatori.</li>
+    <li>Dacă ești autorul original al unei lucrări și nu dorești să fie publicată pe această platformă, ne poți contacta pentru eliminarea ei.</li>
+    <li>Conținutul protejat de drepturi de autor publicat fără permisiunea titularului de drepturi poate fi eliminat fără notificare prealabilă.</li>
+  </ul>
+</div>
+
+<div class="legal-block">
+  <h3>3. Conținut permis</h3>
+  <p>Pe SaferWord sunt permise exclusiv:</p>
+  <ul>
+    <li>Poezii cu tematică creștină sau spirituală</li>
+    <li>Cântece de laudă, adorare sau inspirație creștină</li>
+    <li>Texte originale ale autorului sau materiale din domeniu public</li>
+  </ul>
+</div>
+
+<div class="legal-block">
+  <h3>4. Conținut interzis</h3>
+  <ul>
+    <li>Conținut ofensator, vulgar sau care incită la ură</li>
+    <li>Materiale protejate de copyright publicate fără acordul autorului</li>
+    <li>Conținut care nu are legătură cu tematica platformei</li>
+    <li>Spam, reclame sau promoții comerciale</li>
+  </ul>
+</div>
+
+<div class="legal-block">
+  <h3>5. Răspundere</h3>
+  <p>SaferWord acționează ca platformă intermediară și nu poate fi trasă la răspundere pentru conținutul publicat de utilizatori. Orice reclamație legată de drepturi de autor trebuie adresată direct utilizatorului care a publicat conținutul.</p>
+</div>
+
+<div class="legal-block">
+  <h3>6. Modificări</h3>
+  <p>Ne rezervăm dreptul de a modifica acești termeni oricând. Utilizarea continuă a platformei după modificări constituie acceptarea noilor termeni.</p>
+</div>
+
+<div class="legal-contact">
+  <p>📧 Contact: <strong>saferika88@gmail.com</strong></p>
+  <p style="color:var(--text-dim);font-size:0.82rem;margin-top:6px;">Ultima actualizare: Aprilie 2026</p>
+</div>
+```
+
+  </div>
+
+  <!-- Posts by Author -->
+
+  <div id="posts"></div>
+
+  <!-- Footer -->
+
+  <footer class="site-footer">
+    <span>✦ SaferWord © 2026</span>
+    <button class="footer-link" onclick="toggleLegal()">⚖️ Termeni & Condiții</button>
+  </footer>
+
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL — Termeni la prima logare
+════════════════════════════════════════ -->
+
+<div class="tos-overlay" id="tosOverlay">
+  <div class="tos-modal">
+    <div class="tos-header">
+      <span class="tos-icon">✦</span>
+      <h2>Bine ai venit pe SaferWord!</h2>
+      <p>Înainte de a continua, te rugăm să citești și să accepți termenii noștri.</p>
+    </div>
+
+```
+<div class="tos-body">
+
+  <div class="tos-highlight">
+    <span class="tos-warn-icon">⚠️</span>
+    <div>
+      <strong>Responsabilitate Copyright</strong>
+      <p>Ești singurul responsabil pentru resursele pe care le publici. Publică doar conținut pe care îl deții sau care este în domeniu public.</p>
+    </div>
+  </div>
+
+  <div class="tos-list">
+    <div class="tos-item">
+      <span>✦</span>
+      <p>Platforma este dedicată exclusiv conținutului creștin (poezii și cântece).</p>
+    </div>
+    <div class="tos-item">
+      <span>✦</span>
+      <p>Nu publici conținut ofensator, spam sau materiale protejate de copyright fără permisiune.</p>
+    </div>
+    <div class="tos-item">
+      <span>✦</span>
+      <p>SaferWord poate elimina orice conținut care încalcă aceste reguli, fără notificare.</p>
+    </div>
+    <div class="tos-item">
+      <span>✦</span>
+      <p>Datele tale (email, profil) sunt folosite exclusiv pentru funcționarea platformei.</p>
+    </div>
+  </div>
+
+  <button class="tos-full-link" onclick="toggleLegal(); closeToS();">
+    Citește termenii completi →
+  </button>
+</div>
+
+<div class="tos-footer">
+  <label class="tos-checkbox-wrap">
+    <input type="checkbox" id="tosCheck" onchange="toggleTosBtn()">
+    <span class="tos-checkmark"></span>
+    <span>Am citit și sunt de acord cu termenii și condițiile SaferWord.</span>
+  </label>
+  <button class="btn-primary tos-accept-btn" id="tosAcceptBtn" onclick="acceptToS()" disabled>
+    ✦ Accept și intru pe platformă
+  </button>
+  <button class="btn-secondary" onclick="rejectToS()">Nu accept (Logout)</button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- Comments Panel (slide-in) -->
+
+<div class="comments-overlay" id="commentsOverlay" onclick="closeComments(event)">
+  <div class="comments-panel" id="commentsPanel">
+    <div class="comments-header">
+      <h3 id="commentsPanelTitle">Comentarii</h3>
+      <button class="close-btn" onclick="closeComments()">✕</button>
+    </div>
+    <div class="comments-list" id="commentsList"></div>
+    <div class="comment-input-area" id="commentInputArea" style="display:none;">
+      <textarea id="newComment" class="field" placeholder="Scrie un comentariu..." rows="3"></textarea>
+      <button class="btn-primary" onclick="adaugaComment()">Trimite</button>
+    </div>
+    <div class="comment-login-prompt" id="commentLoginPrompt" style="display:none;">
+      <p>Loghează-te pentru a comenta</p>
+      <button class="btn-google" onclick="loginGoogle()">Login Google</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<script defer src="app.js"></script>
+
 </body>
 </html>
