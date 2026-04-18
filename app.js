@@ -640,6 +640,7 @@ function toggleBoldText() {
   const content = document.getElementById("readerContent");
   const btn = document.getElementById("boldToggleBtn");
   
+  
   content.classList.toggle("bold-text");
   btn.style.opacity = content.classList.contains("bold-text") ? "1" : "0.6";
 }
@@ -1182,4 +1183,123 @@ function viewAuthorDetailsAdmin(userId) {
   
   // Simplu: afișează în alert sau poți deschide un modal
   alert("Detalii autor:\n\nID: " + userId + "\n\nPentru funcționalitate avansată, poți implementa un modal!");
+}
+
+// ===================== PRESENTATION MODE =====================
+
+let presentationState = {
+  post: null,
+  strophes: [],
+  currentStrophe: 0,
+  isPresentationOpen: false
+};
+
+async function openPresentationMode() {
+  const post = allPosts.find(p => p.id === activeReaderPostId);
+  if (!post) return showToast("Eroare la deschidere!", "error");
+  
+  // Parse content în strofe
+  const lines = post.content.split('\n');
+  let strophes = [];
+  let currentStrophe = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === "") {
+      if (currentStrophe.length > 0) {
+        strophes.push(currentStrophe);
+        currentStrophe = [];
+      }
+    } else {
+      currentStrophe.push(lines[i]);
+    }
+  }
+  if (currentStrophe.length > 0) {
+    strophes.push(currentStrophe);
+  }
+  
+  presentationState.post = post;
+  presentationState.strophes = strophes;
+  presentationState.currentStrophe = 0;
+  presentationState.isPresentationOpen = true;
+  
+  showPresentationSlide();
+}
+
+function showPresentationSlide() {
+  const { post, strophes, currentStrophe } = presentationState;
+  
+  const strophe = strophes[currentStrophe];
+  const stropheHTML = strophe.map(line => `<p>${line}</p>`).join("");
+  
+  const html = `
+    <div class="presentation-container">
+      <button class="presentation-close" onclick="closePresentationMode()">✕ Ieșire</button>
+      
+      <div class="presentation-title">${post.title}</div>
+      <div class="presentation-meta">De ${post.author}</div>
+      
+      <div class="presentation-content">
+        <div class="presentation-strophe">
+          ${stropheHTML}
+        </div>
+      </div>
+      
+      <div class="presentation-controls">
+        <button onclick="prevPresentationSlide()">⬅️ Înapoi</button>
+        <div class="presentation-counter">${currentStrophe + 1} / ${strophes.length}</div>
+        <button onclick="nextPresentationSlide()">Înainte ➡️</button>
+      </div>
+    </div>
+  `;
+  
+  // Crează container și injectează
+  let container = document.getElementById("presentationMode");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "presentationMode";
+    document.body.appendChild(container);
+  }
+  
+  container.innerHTML = html;
+  container.style.display = "block";
+  
+  // Keyboard support
+  document.addEventListener("keydown", handlePresentationKeys);
+}
+
+function nextPresentationSlide() {
+  const { strophes } = presentationState;
+  if (presentationState.currentStrophe < strophes.length - 1) {
+    presentationState.currentStrophe++;
+    showPresentationSlide();
+  }
+}
+
+function prevPresentationSlide() {
+  if (presentationState.currentStrophe > 0) {
+    presentationState.currentStrophe--;
+    showPresentationSlide();
+  }
+}
+
+function closePresentationMode() {
+  const container = document.getElementById("presentationMode");
+  if (container) {
+    container.style.display = "none";
+    container.innerHTML = "";
+  }
+  presentationState.isPresentationOpen = false;
+  document.removeEventListener("keydown", handlePresentationKeys);
+}
+
+function handlePresentationKeys(event) {
+  if (!presentationState.isPresentationOpen) return;
+  
+  if (event.key === "ArrowRight" || event.key === " ") {
+    nextPresentationSlide();
+  } else if (event.key === "ArrowLeft") {
+    prevPresentationSlide();
+  } else if (event.key === "Escape") {
+    closePresentationMode();
+  }
 }
