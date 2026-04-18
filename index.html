@@ -1,10 +1,837 @@
+<!DOCTYPE html>
+
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SaferWord</title>
-<link rel="stylesheet" href="style.css">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================
+   SAFERWORD — Glassmorphism Design
+   ========================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–glass-bg: rgba(255,255,255,0.10);
+–glass-border: rgba(255,255,255,0.22);
+–glass-blur: blur(18px);
+–accent: #f472b6;
+–accent2: #818cf8;
+–text: #fff;
+–text-dim: rgba(255,255,255,0.55);
+–radius: 18px;
+–radius-sm: 10px;
+–shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ── BACKGROUND BLOBS ── */
+.bg-scene {
+position: fixed;
+inset: 0;
+background: linear-gradient(135deg, #0f0c29 0%, #2d1b69 40%, #11998e 100%);
+z-index: 0;
+overflow: hidden;
+}
+
+.blob {
+position: absolute;
+border-radius: 50%;
+filter: blur(60px);
+opacity: 0.75;
+animation: floatBlob 12s ease-in-out infinite alternate;
+}
+.blob-1 { width: 420px; height: 420px; background: radial-gradient(circle, #f472b6, #a855f7); top: -100px; left: -80px; animation-duration: 14s; }
+.blob-2 { width: 350px; height: 350px; background: radial-gradient(circle, #3b82f6, #06b6d4); bottom: -80px; right: -60px; animation-duration: 10s; animation-delay: -4s; }
+.blob-3 { width: 260px; height: 260px; background: radial-gradient(circle, #f59e0b, #ef4444); top: 40%; left: 60%; animation-duration: 16s; animation-delay: -7s; }
+.blob-4 { width: 200px; height: 200px; background: radial-gradient(circle, #10b981, #6366f1); top: 60%; left: 10%; animation-duration: 12s; animation-delay: -2s; }
+
+@keyframes floatBlob {
+0%   { transform: translate(0, 0) scale(1); }
+50%  { transform: translate(30px, -40px) scale(1.08); }
+100% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+.noise {
+position: absolute;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+opacity: 0.35;
+pointer-events: none;
+}
+
+/* ── CONTAINER ── */
+.container {
+position: relative;
+z-index: 1;
+max-width: 680px;
+margin: 0 auto;
+padding: 20px 16px 60px;
+}
+
+/* ── GLASS BASE ── */
+.glass-panel {
+background: var(–glass-bg);
+backdrop-filter: var(–glass-blur);
+-webkit-backdrop-filter: var(–glass-blur);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius);
+box-shadow: var(–shadow);
+}
+
+/* ── HEADER ── */
+.header-glass {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 18px 22px;
+margin-bottom: 16px;
+background: rgba(255,255,255,0.08);
+backdrop-filter: blur(24px);
+-webkit-backdrop-filter: blur(24px);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius);
+box-shadow: var(–shadow);
+}
+
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-icon { font-size: 2rem; color: var(–accent); filter: drop-shadow(0 0 8px var(–accent)); }
+.brand h1 { font-family: ‘Cormorant Garamond’, serif; font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1; }
+.brand p { font-size: 0.78rem; color: var(–text-dim); letter-spacing: 0.5px; margin-top: 2px; }
+
+.user-chip {
+display: flex; align-items: center; gap: 10px;
+background: rgba(255,255,255,0.12);
+border: 1px solid var(–glass-border);
+border-radius: 999px;
+padding: 6px 14px 6px 6px;
+cursor: pointer;
+transition: background 0.2s;
+font-size: 0.85rem;
+}
+.user-chip:hover { background: rgba(255,255,255,0.2); }
+.user-avatar {
+width: 32px; height: 32px; border-radius: 50%;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+display: flex; align-items: center; justify-content: center;
+font-size: 0.9rem; font-weight: 600; overflow: hidden;
+}
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* ── NAV ── */
+.nav-glass {
+display: flex; gap: 8px;
+padding: 10px;
+margin-bottom: 16px;
+background: rgba(255,255,255,0.08);
+backdrop-filter: blur(18px);
+-webkit-backdrop-filter: blur(18px);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius);
+}
+
+.nav-btn {
+flex: 1;
+padding: 10px 8px;
+border: none;
+border-radius: 10px;
+background: transparent;
+color: var(–text-dim);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.95rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s;
+display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
+.nav-btn.accent { background: linear-gradient(135deg, rgba(244,114,182,0.4), rgba(129,140,248,0.4)); color: #fff; border: 1px solid rgba(244,114,182,0.4); }
+.nav-btn.accent:hover { background: linear-gradient(135deg, rgba(244,114,182,0.6), rgba(129,140,248,0.6)); }
+.nav-icon { font-size: 1.1rem; }
+
+/* ── SEARCH ── */
+.search-wrap {
+position: relative;
+margin-bottom: 20px;
+}
+.search-icon {
+position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+font-size: 1.1rem; pointer-events: none;
+}
+.search-input {
+width: 100%;
+padding: 14px 16px 14px 46px;
+background: rgba(255,255,255,0.10);
+backdrop-filter: blur(12px);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius);
+color: #fff;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 1rem;
+outline: none;
+transition: border-color 0.2s, background 0.2s;
+}
+.search-input::placeholder { color: var(–text-dim); }
+.search-input:focus { border-color: rgba(244,114,182,0.5); background: rgba(255,255,255,0.15); }
+
+/* ── FIELDS ── */
+.field {
+width: 100%;
+padding: 12px 14px;
+background: rgba(255,255,255,0.10);
+border: 1px solid rgba(255,255,255,0.18);
+border-radius: var(–radius-sm);
+color: #fff;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.97rem;
+outline: none;
+transition: border-color 0.2s, background 0.2s;
+resize: vertical;
+}
+.field::placeholder { color: var(–text-dim); }
+.field:focus { border-color: rgba(244,114,182,0.5); background: rgba(255,255,255,0.16); }
+select.field option { background: #1e1040; color: #fff; }
+
+/* ── PANELS ── */
+.glass-panel { padding: 24px; margin-bottom: 18px; }
+.panel-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.5rem;
+font-weight: 700;
+margin-bottom: 18px;
+letter-spacing: -0.3px;
+}
+
+.form-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── BUTTONS ── */
+.btn-primary {
+padding: 12px 24px;
+background: linear-gradient(135deg, #f472b6, #818cf8);
+border: none;
+border-radius: var(–radius-sm);
+color: #fff;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+transition: opacity 0.2s, transform 0.15s;
+box-shadow: 0 4px 20px rgba(244,114,182,0.4);
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+padding: 12px 24px;
+background: rgba(255,255,255,0.12);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius-sm);
+color: #fff;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 1rem;
+cursor: pointer;
+transition: background 0.2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+.btn-google {
+display: flex; align-items: center; justify-content: center; gap: 12px;
+width: 100%;
+padding: 13px 20px;
+background: rgba(255,255,255,0.95);
+border: none;
+border-radius: var(–radius-sm);
+color: #333;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+transition: background 0.2s;
+margin-top: 8px;
+}
+.btn-google:hover { background: #fff; }
+
+/* ── AUTH / PROFILE PANEL ── */
+.auth-panel { margin-bottom: 18px; }
+
+.profile-avatar-wrap {
+position: relative;
+width: 90px; height: 90px;
+margin: 0 auto 20px;
+}
+.profile-img, .profile-initial {
+width: 90px; height: 90px;
+border-radius: 50%;
+object-fit: cover;
+border: 2px solid var(–glass-border);
+}
+.profile-initial {
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+display: flex; align-items: center; justify-content: center;
+font-size: 2rem; font-weight: 700;
+}
+.avatar-upload-btn {
+position: absolute; bottom: 0; right: 0;
+width: 30px; height: 30px;
+background: rgba(255,255,255,0.2);
+border: 1px solid var(–glass-border);
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+cursor: pointer; font-size: 0.85rem;
+transition: background 0.2s;
+}
+.avatar-upload-btn:hover { background: rgba(255,255,255,0.35); }
+.profile-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
+/* ── AUTHOR GROUPS ── */
+.author-group {
+margin-bottom: 18px;
+border-radius: var(–radius);
+overflow: hidden;
+}
+.author-group-header {
+display: flex; align-items: center; gap: 14px;
+padding: 16px 20px;
+background: rgba(255,255,255,0.10);
+backdrop-filter: blur(18px);
+-webkit-backdrop-filter: blur(18px);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius);
+cursor: pointer;
+transition: background 0.2s;
+user-select: none;
+}
+.author-group-header:hover { background: rgba(255,255,255,0.16); }
+.author-group-header.open { border-radius: var(–radius) var(–radius) 0 0; }
+
+.author-avatar-sm {
+width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+display: flex; align-items: center; justify-content: center;
+font-size: 1.1rem; font-weight: 700; overflow: hidden;
+border: 2px solid rgba(255,255,255,0.25);
+}
+.author-avatar-sm img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.author-group-info { flex: 1; }
+.author-group-name { font-size: 1.05rem; font-weight: 600; }
+.author-group-meta { font-size: 0.8rem; color: var(–text-dim); margin-top: 2px; }
+
+.author-group-chevron {
+font-size: 1rem; color: var(–text-dim);
+transition: transform 0.3s;
+}
+.author-group-chevron.open { transform: rotate(180deg); }
+
+.author-group-posts {
+background: rgba(255,255,255,0.06);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border: 1px solid var(–glass-border);
+border-top: none;
+border-radius: 0 0 var(–radius) var(–radius);
+overflow: hidden;
+max-height: 0;
+transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.author-group-posts.open { max-height: 9000px; }
+
+/* ── POST CARD ── */
+.post {
+padding: 18px 20px;
+border-bottom: 1px solid rgba(255,255,255,0.07);
+transition: background 0.2s;
+}
+.post:last-child { border-bottom: none; }
+.post:hover { background: rgba(255,255,255,0.04); }
+
+.post-type-badge {
+display: inline-block;
+padding: 3px 10px;
+border-radius: 999px;
+font-size: 0.75rem;
+font-weight: 600;
+letter-spacing: 0.3px;
+margin-bottom: 8px;
+background: rgba(244,114,182,0.2);
+border: 1px solid rgba(244,114,182,0.35);
+color: #f9a8d4;
+}
+.post-type-badge.cantec {
+background: rgba(129,140,248,0.2);
+border-color: rgba(129,140,248,0.35);
+color: #c7d2fe;
+}
+
+.post-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.35rem;
+font-weight: 700;
+margin-bottom: 6px;
+line-height: 1.25;
+}
+.post-content {
+font-size: 0.97rem;
+color: rgba(255,255,255,0.75);
+line-height: 1.65;
+white-space: pre-wrap;
+margin-bottom: 12px;
+}
+
+.post-meta {
+display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+font-size: 0.8rem; color: var(–text-dim);
+margin-bottom: 12px;
+}
+.post-meta span { display: flex; align-items: center; gap: 4px; }
+
+.post-actions {
+display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+margin-top: 8px;
+}
+
+.action-btn {
+display: flex; align-items: center; gap: 6px;
+padding: 7px 14px;
+background: rgba(255,255,255,0.08);
+border: 1px solid rgba(255,255,255,0.15);
+border-radius: 999px;
+color: var(–text-dim);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.87rem;
+cursor: pointer;
+transition: all 0.2s;
+}
+.action-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.action-btn.liked { color: #f472b6; border-color: rgba(244,114,182,0.4); background: rgba(244,114,182,0.12); }
+.action-btn.edit-btn:hover { border-color: rgba(129,140,248,0.5); color: #c7d2fe; }
+.action-btn.delete-btn:hover { border-color: rgba(239,68,68,0.5); color: #fca5a5; }
+.action-btn .btn-icon { font-size: 1rem; }
+
+/* ── EDIT INLINE ── */
+.edit-form { padding: 12px 0; }
+.edit-form .field { margin-bottom: 10px; }
+.edit-form select.field { margin-bottom: 10px; }
+
+/* ── COMMENTS PANEL ── */
+.comments-overlay {
+position: fixed; inset: 0; z-index: 100;
+background: rgba(0,0,0,0);
+pointer-events: none;
+transition: background 0.3s;
+}
+.comments-overlay.open {
+background: rgba(0,0,0,0.45);
+pointer-events: all;
+}
+
+.comments-panel {
+position: fixed; right: 0; top: 0; bottom: 0;
+width: min(420px, 100vw);
+background: rgba(18, 8, 50, 0.85);
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+border-left: 1px solid var(–glass-border);
+display: flex; flex-direction: column;
+transform: translateX(100%);
+transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+box-shadow: -8px 0 40px rgba(0,0,0,0.4);
+}
+.comments-overlay.open .comments-panel { transform: translateX(0); }
+
+.comments-header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 22px 24px;
+border-bottom: 1px solid var(–glass-border);
+}
+.comments-header h3 {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.35rem; font-weight: 700;
+}
+.close-btn {
+background: rgba(255,255,255,0.1); border: 1px solid var(–glass-border);
+color: #fff; width: 34px; height: 34px; border-radius: 50%;
+font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+transition: background 0.2s;
+}
+.close-btn:hover { background: rgba(255,255,255,0.2); }
+
+.comments-list {
+flex: 1; overflow-y: auto;
+padding: 16px 24px;
+display: flex; flex-direction: column; gap: 14px;
+}
+.comments-list::-webkit-scrollbar { width: 4px; }
+.comments-list::-webkit-scrollbar-track { background: transparent; }
+.comments-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 99px; }
+
+.comment-item {
+padding: 12px 14px;
+background: rgba(255,255,255,0.07);
+border: 1px solid rgba(255,255,255,0.10);
+border-radius: var(–radius-sm);
+}
+.comment-author { font-size: 0.82rem; font-weight: 600; color: #f9a8d4; margin-bottom: 5px; }
+.comment-text { font-size: 0.93rem; color: rgba(255,255,255,0.82); line-height: 1.5; }
+.comment-date { font-size: 0.75rem; color: var(–text-dim); margin-top: 5px; }
+
+.comment-empty {
+text-align: center; padding: 40px 0;
+color: var(–text-dim); font-size: 0.95rem;
+}
+
+.comment-input-area {
+padding: 16px 24px;
+border-top: 1px solid var(–glass-border);
+display: flex; flex-direction: column; gap: 10px;
+}
+.comment-login-prompt {
+padding: 20px 24px;
+border-top: 1px solid var(–glass-border);
+text-align: center;
+}
+.comment-login-prompt p { color: var(–text-dim); margin-bottom: 10px; font-size: 0.93rem; }
+
+/* ── LEGAL PANEL ── */
+.legal-panel { margin-bottom: 24px; }
+
+.legal-block {
+margin-bottom: 22px;
+padding-bottom: 22px;
+border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.legal-block:last-of-type { border-bottom: none; }
+
+.legal-block h3 {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.15rem;
+font-weight: 700;
+margin-bottom: 10px;
+color: #f9a8d4;
+}
+.legal-block p {
+font-size: 0.95rem;
+color: rgba(255,255,255,0.78);
+line-height: 1.65;
+margin-bottom: 8px;
+}
+.legal-block ul {
+list-style: none;
+display: flex; flex-direction: column; gap: 7px;
+padding: 0;
+}
+.legal-block ul li {
+font-size: 0.93rem;
+color: rgba(255,255,255,0.72);
+line-height: 1.5;
+padding-left: 18px;
+position: relative;
+}
+.legal-block ul li::before {
+content: “✦”;
+position: absolute; left: 0;
+color: #f472b6; font-size: 0.7rem; top: 3px;
+}
+.legal-block strong { color: #fff; }
+
+.legal-contact {
+background: rgba(244,114,182,0.08);
+border: 1px solid rgba(244,114,182,0.2);
+border-radius: var(–radius-sm);
+padding: 16px 18px;
+font-size: 0.93rem;
+}
+
+/* ── FOOTER ── */
+.site-footer {
+display: flex; align-items: center; justify-content: space-between;
+padding: 20px 4px 0;
+font-size: 0.82rem;
+color: var(–text-dim);
+border-top: 1px solid rgba(255,255,255,0.08);
+margin-top: 20px;
+}
+.footer-link {
+background: none; border: none;
+color: var(–text-dim);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.82rem;
+cursor: pointer;
+padding: 4px 8px;
+border-radius: 6px;
+transition: color 0.2s, background 0.2s;
+}
+.footer-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+/* ── TOS OVERLAY (first login) ── */
+.tos-overlay {
+position: fixed; inset: 0; z-index: 200;
+background: rgba(5, 2, 20, 0.82);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+display: flex; align-items: center; justify-content: center;
+padding: 16px;
+opacity: 0; pointer-events: none;
+transition: opacity 0.35s;
+}
+.tos-overlay.open { opacity: 1; pointer-events: all; }
+
+.tos-modal {
+width: 100%; max-width: 500px;
+max-height: 90vh; overflow-y: auto;
+background: rgba(18, 8, 55, 0.92);
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+border: 1px solid rgba(244,114,182,0.3);
+border-radius: 22px;
+box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+display: flex; flex-direction: column;
+animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tos-modal::-webkit-scrollbar { width: 4px; }
+.tos-modal::-webkit-scrollbar-thumb { background: rgba(244,114,182,0.3); border-radius: 99px; }
+
+@keyframes modalPop {
+from { transform: scale(0.88) translateY(20px); opacity: 0; }
+to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.tos-header {
+text-align: center;
+padding: 32px 28px 20px;
+border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.tos-icon {
+display: block;
+font-size: 2.5rem;
+color: #f472b6;
+filter: drop-shadow(0 0 12px #f472b6);
+margin-bottom: 14px;
+}
+.tos-header h2 {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.7rem; font-weight: 700;
+margin-bottom: 8px;
+}
+.tos-header p {
+font-size: 0.93rem; color: var(–text-dim); line-height: 1.5;
+}
+
+.tos-body { padding: 22px 28px; }
+
+.tos-highlight {
+display: flex; gap: 14px; align-items: flex-start;
+background: rgba(244,114,182,0.10);
+border: 1px solid rgba(244,114,182,0.25);
+border-radius: var(–radius-sm);
+padding: 14px 16px;
+margin-bottom: 18px;
+}
+.tos-warn-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+.tos-highlight strong { display: block; font-size: 0.97rem; margin-bottom: 5px; }
+.tos-highlight p { font-size: 0.88rem; color: rgba(255,255,255,0.72); line-height: 1.5; margin: 0; }
+
+.tos-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.tos-item {
+display: flex; gap: 12px; align-items: flex-start;
+font-size: 0.9rem; color: rgba(255,255,255,0.75); line-height: 1.5;
+}
+.tos-item span { color: #f472b6; font-size: 0.75rem; flex-shrink: 0; margin-top: 4px; }
+
+.tos-full-link {
+background: none; border: none;
+color: #a5b4fc;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.88rem;
+cursor: pointer;
+padding: 0;
+text-decoration: underline;
+text-underline-offset: 3px;
+}
+.tos-full-link:hover { color: #c7d2fe; }
+
+.tos-footer {
+padding: 20px 28px 28px;
+border-top: 1px solid rgba(255,255,255,0.08);
+display: flex; flex-direction: column; gap: 12px;
+}
+
+.tos-checkbox-wrap {
+display: flex; align-items: flex-start; gap: 12px;
+cursor: pointer;
+font-size: 0.9rem; color: rgba(255,255,255,0.8); line-height: 1.45;
+}
+.tos-checkbox-wrap input { display: none; }
+.tos-checkmark {
+width: 20px; height: 20px; flex-shrink: 0;
+border: 2px solid rgba(244,114,182,0.5);
+border-radius: 5px;
+background: rgba(255,255,255,0.05);
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s;
+margin-top: 1px;
+}
+.tos-checkbox-wrap input:checked + .tos-checkmark {
+background: linear-gradient(135deg, #f472b6, #818cf8);
+border-color: transparent;
+}
+.tos-checkbox-wrap input:checked + .tos-checkmark::after {
+content: “✓”;
+color: #fff; font-size: 0.75rem; font-weight: 700;
+}
+
+.tos-accept-btn { width: 100%; }
+.tos-accept-btn:disabled {
+opacity: 0.4; cursor: not-allowed;
+transform: none !important;
+}
+
+/* ── WIDGETS ── */
+#homepageWidgets { margin-bottom: 24px; }
+
+.widget-card {
+background: var(–glass-bg);
+backdrop-filter: var(–glass-blur);
+-webkit-backdrop-filter: var(–glass-blur);
+border: 1px solid var(–glass-border);
+border-radius: var(–radius);
+padding: 20px 22px;
+box-shadow: var(–shadow);
+}
+
+.widgets-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 14px;
+margin-top: 14px;
+}
+
+/* Verse card */
+.verse-card {
+margin-bottom: 14px;
+position: relative;
+overflow: hidden;
+background: linear-gradient(135deg, rgba(244,114,182,0.12), rgba(129,140,248,0.12));
+border-color: rgba(244,114,182,0.25);
+}
+.verse-card::before {
+content: “❝”;
+position: absolute; right: 16px; top: 8px;
+font-size: 5rem; color: rgba(244,114,182,0.10);
+font-family: ‘Cormorant Garamond’, serif;
+line-height: 1; pointer-events: none;
+}
+.verse-label {
+font-size: 0.75rem; font-weight: 600; letter-spacing: 1px;
+text-transform: uppercase; color: #f9a8d4;
+margin-bottom: 12px;
+}
+.verse-text {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.25rem; font-weight: 600;
+line-height: 1.55; color: #fff;
+margin: 0 0 10px 0;
+font-style: italic;
+transition: opacity 0.5s;
+}
+.verse-text.fade { opacity: 0; }
+.verse-ref {
+font-size: 0.82rem; color: #f9a8d4;
+font-style: normal; font-weight: 600;
+letter-spacing: 0.3px;
+}
+
+/* Widget titles */
+.widget-title {
+font-size: 0.8rem; font-weight: 600;
+letter-spacing: 0.5px; text-transform: uppercase;
+color: var(–text-dim); margin-bottom: 14px;
+}
+
+/* Widget lists */
+.widget-list { display: flex; flex-direction: column; gap: 10px; }
+.widget-loading { font-size: 0.85rem; color: var(–text-dim); }
+
+/* Latest item */
+.latest-item {
+display: flex; flex-direction: column; gap: 2px;
+padding: 9px 11px;
+background: rgba(255,255,255,0.06);
+border: 1px solid rgba(255,255,255,0.08);
+border-radius: 8px;
+cursor: pointer;
+transition: background 0.2s;
+}
+.latest-item:hover { background: rgba(255,255,255,0.12); }
+.latest-item-title {
+font-size: 0.9rem; font-weight: 600;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.latest-item-meta {
+font-size: 0.74rem; color: var(–text-dim);
+display: flex; align-items: center; gap: 6px;
+}
+.latest-badge {
+padding: 1px 6px; border-radius: 999px; font-size: 0.68rem;
+background: rgba(244,114,182,0.18); color: #f9a8d4;
+border: 1px solid rgba(244,114,182,0.25);
+}
+.latest-badge.cantec {
+background: rgba(129,140,248,0.18); color: #c7d2fe;
+border-color: rgba(129,140,248,0.25);
+}
+
+/* Top user item */
+.top-item {
+display: flex; align-items: center; gap: 10px;
+padding: 7px 4px;
+border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.top-item:last-child { border-bottom: none; }
+.top-rank {
+font-size: 0.8rem; font-weight: 700; width: 22px;
+color: var(–text-dim); text-align: center; flex-shrink: 0;
+}
+.top-rank.gold   { color: #fbbf24; }
+.top-rank.silver { color: #94a3b8; }
+.top-rank.bronze { color: #c2773a; }
+.top-avatar {
+width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+display: flex; align-items: center; justify-content: center;
+font-size: 0.82rem; font-weight: 700; overflow: hidden;
+}
+.top-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.top-info { flex: 1; min-width: 0; }
+.top-name {
+font-size: 0.88rem; font-weight: 600;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top-count { font-size: 0.74rem; color: var(–text-dim); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+.brand h1 { font-size: 1.3rem; }
+.header-glass { padding: 14px 16px; }
+.glass-panel { padding: 18px 14px; }
+.post { padding: 14px 16px; }
+.tos-header { padding: 24px 18px 16px; }
+.tos-body { padding: 18px; }
+.tos-footer { padding: 16px 18px 22px; }
+.widgets-grid { grid-template-columns: 1fr; }
+}
+
+</style>
 </head>
 <body>
 
@@ -65,42 +892,29 @@
     <input id="search" class="search-input" placeholder="Caută titlu sau conținut..." oninput="searchPosts()">
   </div>
 
-  <!-- ═══ WIDGETS HOMEPAGE ═══ -->
+  <!-- WIDGETS HOMEPAGE -->
 
   <div id="homepageWidgets">
-
-```
-<!-- Verset biblic zilnic -->
-<div class="widget-card verse-card">
-  <div class="verse-label">✦ Verset zilnic</div>
-  <blockquote id="verseText" class="verse-text">Se încarcă...</blockquote>
-  <cite id="verseRef" class="verse-ref"></cite>
-</div>
-
-<!-- Grid: Ultimele resurse + Top utilizatori -->
-<div class="widgets-grid">
-
-  <!-- Ultimele resurse -->
-  <div class="widget-card">
-    <div class="widget-title">🕐 Ultimele adăugate</div>
-    <div id="latestList" class="widget-list">
-      <div class="widget-loading">Se încarcă...</div>
+    <div class="widget-card verse-card">
+      <div class="verse-label">✦ Verset zilnic</div>
+      <blockquote id="verseText" class="verse-text">Se încarcă...</blockquote>
+      <cite id="verseRef" class="verse-ref"></cite>
+    </div>
+    <div class="widgets-grid">
+      <div class="widget-card">
+        <div class="widget-title">🕐 Ultimele adăugate</div>
+        <div id="latestList" class="widget-list">
+          <div class="widget-loading">Se încarcă...</div>
+        </div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-title">🏆 Top contributori</div>
+        <div id="topList" class="widget-list">
+          <div class="widget-loading">Se încarcă...</div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <!-- Top utilizatori -->
-  <div class="widget-card">
-    <div class="widget-title">🏆 Top contributori</div>
-    <div id="topList" class="widget-list">
-      <div class="widget-loading">Se încarcă...</div>
-    </div>
-  </div>
-
-</div>
-```
-
-  </div>
-  <!-- ═══ END WIDGETS ═══ -->
 
   <!-- Add Form -->
 
@@ -162,63 +976,53 @@
 
   <div class="glass-panel legal-panel" id="legalSection" style="display:none;">
     <h2 class="panel-title">⚖️ Termeni & Condiții</h2>
-
-```
-<div class="legal-block">
-  <h3>1. Despre SaferWord</h3>
-  <p>SaferWord este o platformă comunitară dedicată distribuirii de poezii și cântece creștine. Scopul nostru este să oferim un spațiu digital de inspirație spirituală, gratuit și accesibil tuturor.</p>
-</div>
-
-<div class="legal-block">
-  <h3>2. Drepturi de autor & Copyright ⚠️</h3>
-  <p><strong>Utilizatorii sunt singurii responsabili</strong> pentru conținutul pe care îl publică pe platformă.</p>
-  <ul>
-    <li>Prin publicarea unei resurse, declari că deții drepturile necesare sau că materialul este în domeniu public.</li>
-    <li>SaferWord nu revendică dreptul de proprietate asupra niciunui conținut publicat de utilizatori.</li>
-    <li>Dacă ești autorul original al unei lucrări și nu dorești să fie publicată pe această platformă, ne poți contacta pentru eliminarea ei.</li>
-    <li>Conținutul protejat de drepturi de autor publicat fără permisiunea titularului de drepturi poate fi eliminat fără notificare prealabilă.</li>
-  </ul>
-</div>
-
-<div class="legal-block">
-  <h3>3. Conținut permis</h3>
-  <p>Pe SaferWord sunt permise exclusiv:</p>
-  <ul>
-    <li>Poezii cu tematică creștină sau spirituală</li>
-    <li>Cântece de laudă, adorare sau inspirație creștină</li>
-    <li>Texte originale ale autorului sau materiale din domeniu public</li>
-  </ul>
-</div>
-
-<div class="legal-block">
-  <h3>4. Conținut interzis</h3>
-  <ul>
-    <li>Conținut ofensator, vulgar sau care incită la ură</li>
-    <li>Materiale protejate de copyright publicate fără acordul autorului</li>
-    <li>Conținut care nu are legătură cu tematica platformei</li>
-    <li>Spam, reclame sau promoții comerciale</li>
-  </ul>
-</div>
-
-<div class="legal-block">
-  <h3>5. Răspundere</h3>
-  <p>SaferWord acționează ca platformă intermediară și nu poate fi trasă la răspundere pentru conținutul publicat de utilizatori. Orice reclamație legată de drepturi de autor trebuie adresată direct utilizatorului care a publicat conținutul.</p>
-</div>
-
-<div class="legal-block">
-  <h3>6. Modificări</h3>
-  <p>Ne rezervăm dreptul de a modifica acești termeni oricând. Utilizarea continuă a platformei după modificări constituie acceptarea noilor termeni.</p>
-</div>
-
-<div class="legal-contact">
-  <p>📧 Contact: <strong>saferika88@gmail.com</strong></p>
-  <p style="color:var(--text-dim);font-size:0.82rem;margin-top:6px;">Ultima actualizare: Aprilie 2026</p>
-</div>
-```
-
+    <div class="legal-block">
+      <h3>1. Despre SaferWord</h3>
+      <p>SaferWord este o platformă comunitară dedicată distribuirii de poezii și cântece creștine. Scopul nostru este să oferim un spațiu digital de inspirație spirituală, gratuit și accesibil tuturor.</p>
+    </div>
+    <div class="legal-block">
+      <h3>2. Drepturi de autor & Copyright ⚠️</h3>
+      <p><strong>Utilizatorii sunt singurii responsabili</strong> pentru conținutul pe care îl publică pe platformă.</p>
+      <ul>
+        <li>Prin publicarea unei resurse, declari că deții drepturile necesare sau că materialul este în domeniu public.</li>
+        <li>SaferWord nu revendică dreptul de proprietate asupra niciunui conținut publicat de utilizatori.</li>
+        <li>Dacă ești autorul original al unei lucrări și nu dorești să fie publicată pe această platformă, ne poți contacta pentru eliminarea ei.</li>
+        <li>Conținutul protejat de drepturi de autor publicat fără permisiunea titularului de drepturi poate fi eliminat fără notificare prealabilă.</li>
+      </ul>
+    </div>
+    <div class="legal-block">
+      <h3>3. Conținut permis</h3>
+      <p>Pe SaferWord sunt permise exclusiv:</p>
+      <ul>
+        <li>Poezii cu tematică creștină sau spirituală</li>
+        <li>Cântece de laudă, adorare sau inspirație creștină</li>
+        <li>Texte originale ale autorului sau materiale din domeniu public</li>
+      </ul>
+    </div>
+    <div class="legal-block">
+      <h3>4. Conținut interzis</h3>
+      <ul>
+        <li>Conținut ofensator, vulgar sau care incită la ură</li>
+        <li>Materiale protejate de copyright publicate fără acordul autorului</li>
+        <li>Conținut care nu are legătură cu tematica platformei</li>
+        <li>Spam, reclame sau promoții comerciale</li>
+      </ul>
+    </div>
+    <div class="legal-block">
+      <h3>5. Răspundere</h3>
+      <p>SaferWord acționează ca platformă intermediară și nu poate fi trasă la răspundere pentru conținutul publicat de utilizatori.</p>
+    </div>
+    <div class="legal-block">
+      <h3>6. Modificări</h3>
+      <p>Ne rezervăm dreptul de a modifica acești termeni oricând. Utilizarea continuă a platformei după modificări constituie acceptarea noilor termeni.</p>
+    </div>
+    <div class="legal-contact">
+      <p>📧 Contact: <strong>saferika88@gmail.com</strong></p>
+      <p style="color:rgba(255,255,255,0.55);font-size:0.82rem;margin-top:6px;">Ultima actualizare: Aprilie 2026</p>
+    </div>
   </div>
 
-  <!-- Posts by Author -->
+  <!-- Posts -->
 
   <div id="posts"></div>
 
@@ -231,9 +1035,7 @@
 
 </div>
 
-<!-- ═══════════════════════════════════════
-     MODAL — Termeni la prima logare
-════════════════════════════════════════ -->
+<!-- TOS Modal -->
 
 <div class="tos-overlay" id="tosOverlay">
   <div class="tos-modal">
@@ -242,59 +1044,35 @@
       <h2>Bine ai venit pe SaferWord!</h2>
       <p>Înainte de a continua, te rugăm să citești și să accepți termenii noștri.</p>
     </div>
-
-```
-<div class="tos-body">
-
-  <div class="tos-highlight">
-    <span class="tos-warn-icon">⚠️</span>
-    <div>
-      <strong>Responsabilitate Copyright</strong>
-      <p>Ești singurul responsabil pentru resursele pe care le publici. Publică doar conținut pe care îl deții sau care este în domeniu public.</p>
+    <div class="tos-body">
+      <div class="tos-highlight">
+        <span class="tos-warn-icon">⚠️</span>
+        <div>
+          <strong>Responsabilitate Copyright</strong>
+          <p>Ești singurul responsabil pentru resursele pe care le publici. Publică doar conținut pe care îl deții sau care este în domeniu public.</p>
+        </div>
+      </div>
+      <div class="tos-list">
+        <div class="tos-item"><span>✦</span><p>Platforma este dedicată exclusiv conținutului creștin (poezii și cântece).</p></div>
+        <div class="tos-item"><span>✦</span><p>Nu publici conținut ofensator, spam sau materiale protejate de copyright fără permisiune.</p></div>
+        <div class="tos-item"><span>✦</span><p>SaferWord poate elimina orice conținut care încalcă aceste reguli, fără notificare.</p></div>
+        <div class="tos-item"><span>✦</span><p>Datele tale (email, profil) sunt folosite exclusiv pentru funcționarea platformei.</p></div>
+      </div>
+      <button class="tos-full-link" onclick="toggleLegal(); closeToS();">Citește termenii completi →</button>
     </div>
-  </div>
-
-  <div class="tos-list">
-    <div class="tos-item">
-      <span>✦</span>
-      <p>Platforma este dedicată exclusiv conținutului creștin (poezii și cântece).</p>
+    <div class="tos-footer">
+      <label class="tos-checkbox-wrap">
+        <input type="checkbox" id="tosCheck" onchange="toggleTosBtn()">
+        <span class="tos-checkmark"></span>
+        <span>Am citit și sunt de acord cu termenii și condițiile SaferWord.</span>
+      </label>
+      <button class="btn-primary tos-accept-btn" id="tosAcceptBtn" onclick="acceptToS()" disabled>✦ Accept și intru pe platformă</button>
+      <button class="btn-secondary" onclick="rejectToS()">Nu accept (Logout)</button>
     </div>
-    <div class="tos-item">
-      <span>✦</span>
-      <p>Nu publici conținut ofensator, spam sau materiale protejate de copyright fără permisiune.</p>
-    </div>
-    <div class="tos-item">
-      <span>✦</span>
-      <p>SaferWord poate elimina orice conținut care încalcă aceste reguli, fără notificare.</p>
-    </div>
-    <div class="tos-item">
-      <span>✦</span>
-      <p>Datele tale (email, profil) sunt folosite exclusiv pentru funcționarea platformei.</p>
-    </div>
-  </div>
-
-  <button class="tos-full-link" onclick="toggleLegal(); closeToS();">
-    Citește termenii completi →
-  </button>
-</div>
-
-<div class="tos-footer">
-  <label class="tos-checkbox-wrap">
-    <input type="checkbox" id="tosCheck" onchange="toggleTosBtn()">
-    <span class="tos-checkmark"></span>
-    <span>Am citit și sunt de acord cu termenii și condițiile SaferWord.</span>
-  </label>
-  <button class="btn-primary tos-accept-btn" id="tosAcceptBtn" onclick="acceptToS()" disabled>
-    ✦ Accept și intru pe platformă
-  </button>
-  <button class="btn-secondary" onclick="rejectToS()">Nu accept (Logout)</button>
-</div>
-```
-
   </div>
 </div>
 
-<!-- Comments Panel (slide-in) -->
+<!-- Comments Panel -->
 
 <div class="comments-overlay" id="commentsOverlay" onclick="closeComments(event)">
   <div class="comments-panel" id="commentsPanel">
@@ -316,7 +1094,754 @@
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-<script defer src="app.js"></script>
+<script>
 
+/* =============================================
+   SAFERWORD — app.js (enhanced)
+   ============================================= */
+
+// Supabase se inițializează după ce scriptul e gata
+let supabaseClient;
+try {
+  supabaseClient = window.supabase.createClient(
+    "https://pmbckejotwiypykuftkm.supabase.co",
+    "sb_publishable_W1NGbl7dFtRyhQzF3UXznQ_ab77fyK-"
+  );
+} catch(e) {
+  console.error("Supabase init failed:", e);
+}
+
+const ADMIN_EMAIL = "saferika88@gmail.com";
+
+let allPosts = [];
+let currentUser = null;
+let currentFilter = "toate";
+let activeCommentPostId = null;
+let profileData = {};
+
+/* ── INIT ── */
+function initApp() {
+  if (!supabaseClient) {
+    console.error("Supabase nu e disponibil!");
+    return;
+  }
+  refreshUser().then(() => {
+    incarcaPostari();
+    handleAuthRedirect();
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
+
+async function handleAuthRedirect() {
+  const hash = window.location.hash;
+  if (hash && hash.includes("access_token")) {
+    await refreshUser();
+    window.history.replaceState(null, "", window.location.pathname);
+    // Check if new user needs to accept ToS
+    if (currentUser) checkToS();
+  }
+}
+
+/* ── TOS (Termeni & Condiții) ── */
+const TOS_KEY = "saferword_tos_accepted_v1";
+
+function checkToS() {
+  if (!currentUser) return;
+  // Check per-user acceptance stored in localStorage
+  const accepted = localStorage.getItem(`${TOS_KEY}_${currentUser.id}`);
+  if (!accepted) {
+    document.getElementById("tosOverlay").classList.add("open");
+  }
+}
+
+function toggleTosBtn() {
+  const checked = document.getElementById("tosCheck").checked;
+  document.getElementById("tosAcceptBtn").disabled = !checked;
+}
+
+function acceptToS() {
+  if (!currentUser) return;
+  localStorage.setItem(`${TOS_KEY}_${currentUser.id}`, "true");
+  document.getElementById("tosOverlay").classList.remove("open");
+}
+
+function rejectToS() {
+  logout();
+  document.getElementById("tosOverlay").classList.remove("open");
+}
+
+function closeToS() {
+  document.getElementById("tosOverlay").classList.remove("open");
+}
+
+function toggleLegal() {
+  const legal = document.getElementById("legalSection");
+  const isVisible = legal.style.display !== "none";
+  // Hide posts area, show legal
+  document.getElementById("posts").style.display = isVisible ? "block" : "none";
+  legal.style.display = isVisible ? "none" : "block";
+  document.getElementById("formSection").style.display = "none";
+  // Scroll to top of legal
+  if (!isVisible) legal.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ── AUTH ── */
+async function refreshUser() {
+  const { data } = await supabaseClient.auth.getUser();
+  const wasLoggedIn = !!currentUser;
+  currentUser = data?.user || null;
+  afiseazaHeaderUser();
+  // Show ToS on first login
+  if (!wasLoggedIn && currentUser) checkToS();
+}
+
+async function loginGoogle() {
+  await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  profileData = {};
+  afiseazaHeaderUser();
+  document.getElementById("authPanel").style.display = "none";
+  incarcaPostari();
+}
+
+function afiseazaHeaderUser() {
+  const chip = document.getElementById("headerEmail");
+  const avatarEl = document.getElementById("headerAvatar");
+  if (currentUser) {
+    chip.textContent = currentUser.email.split("@")[0];
+    if (profileData.avatar_url) {
+      avatarEl.innerHTML = `<img src="${profileData.avatar_url}" alt="">`;
+    } else {
+      avatarEl.textContent = currentUser.email[0].toUpperCase();
+    }
+  } else {
+    chip.textContent = "Cont";
+    avatarEl.textContent = "?";
+  }
+}
+
+/* ── TOGGLE PROFILE PANEL ── */
+async function toggleProfile() {
+  const panel = document.getElementById("authPanel");
+  const isVisible = panel.style.display !== "none";
+  panel.style.display = isVisible ? "none" : "block";
+
+  if (!isVisible) {
+    if (currentUser) {
+      document.getElementById("authContent").style.display = "none";
+      document.getElementById("profileContent").style.display = "block";
+      await incarcaProfil();
+    } else {
+      document.getElementById("authContent").style.display = "block";
+      document.getElementById("profileContent").style.display = "none";
+    }
+  }
+}
+
+/* ── PROFILE ── */
+async function incarcaProfil() {
+  if (!currentUser) return;
+  const { data } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  profileData = data || {};
+
+  if (data) {
+    document.getElementById("profileNume").value = data.display_name || "";
+    document.getElementById("profileLocatie").value = data.location || "";
+    document.getElementById("profileSex").value = data.sex || "";
+    document.getElementById("profileBio").value = data.bio || "";
+
+    if (data.avatar_url) {
+      document.getElementById("profileImg").src = data.avatar_url;
+      document.getElementById("profileImg").style.display = "block";
+      document.getElementById("profileInitial").style.display = "none";
+    } else {
+      document.getElementById("profileImg").style.display = "none";
+      document.getElementById("profileInitial").style.display = "flex";
+      document.getElementById("profileInitial").textContent = currentUser.email[0].toUpperCase();
+    }
+  }
+}
+
+async function salveazaProfil() {
+  if (!currentUser) return;
+  const payload = {
+    user_id: currentUser.id,
+    display_name: document.getElementById("profileNume").value,
+    location: document.getElementById("profileLocatie").value,
+    sex: document.getElementById("profileSex").value,
+    bio: document.getElementById("profileBio").value,
+    avatar_url: profileData.avatar_url || null
+  };
+
+  const { error } = await supabaseClient
+    .from("profiles")
+    .upsert(payload, { onConflict: "user_id" });
+
+  if (!error) {
+    profileData = payload;
+    afiseazaHeaderUser();
+    alert("Profil salvat ✦");
+  } else {
+    console.error(error);
+    alert("Eroare la salvare. Verifică tabelul 'profiles' în Supabase.");
+  }
+}
+
+async function uploadAvatar(input) {
+  if (!currentUser || !input.files[0]) return;
+  const file = input.files[0];
+  const ext = file.name.split(".").pop();
+  const path = `avatars/${currentUser.id}.${ext}`;
+
+  const { error } = await supabaseClient.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true });
+
+  if (!error) {
+    const { data: urlData } = supabaseClient.storage.from("avatars").getPublicUrl(path);
+    profileData.avatar_url = urlData.publicUrl;
+    document.getElementById("profileImg").src = urlData.publicUrl;
+    document.getElementById("profileImg").style.display = "block";
+    document.getElementById("profileInitial").style.display = "none";
+    afiseazaHeaderUser();
+  } else {
+    alert("Nu s-a putut uploada imaginea. Asigură-te că bucket-ul 'avatars' există în Supabase Storage.");
+    console.error(error);
+  }
+}
+
+/* ── TOGGLE FORM ── */
+function toggleForm() {
+  const f = document.getElementById("formSection");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+/* ── ADD POST ── */
+async function adaugaPost() {
+  if (!currentUser) return alert("Te rog loghează-te mai întâi!");
+
+  const title = document.getElementById("title").value.trim();
+  const content = document.getElementById("content").value.trim();
+  const author = document.getElementById("author").value.trim();
+  const type = document.getElementById("type").value;
+
+  if (!title || !content) return alert("Completează titlul și conținutul.");
+
+  const { error } = await supabaseClient.from("posts").insert([{
+    title, content, author: author || null, type,
+    user_id: currentUser.id,
+    views: 0, likes: 0
+  }]);
+
+  if (!error) {
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
+    document.getElementById("author").value = "";
+    toggleForm();
+    await incarcaPostari();
+  } else {
+    console.error(error);
+    alert("Eroare la publicare. Verifică structura tabelului.");
+  }
+}
+
+/* ── DELETE ── */
+async function deletePost(id) {
+  if (!confirm("Ștergi această resursă?")) return;
+  await supabaseClient.from("posts").delete().eq("id", id);
+  incarcaPostari();
+}
+
+/* ── EDIT ── */
+function startEdit(id) {
+  document.getElementById(`view-${id}`).style.display = "none";
+  document.getElementById(`edit-${id}`).style.display = "block";
+}
+
+async function saveEdit(id) {
+  const title = document.getElementById(`edit-title-${id}`).value.trim();
+  const content = document.getElementById(`edit-content-${id}`).value.trim();
+  const type = document.getElementById(`edit-type-${id}`).value;
+
+  const { error } = await supabaseClient
+    .from("posts")
+    .update({ title, content, type })
+    .eq("id", id);
+
+  if (!error) incarcaPostari();
+  else console.error(error);
+}
+
+function cancelEdit(id) {
+  document.getElementById(`edit-${id}`).style.display = "none";
+  document.getElementById(`view-${id}`).style.display = "block";
+}
+
+/* ── VIEWS ── */
+async function incrementViews(id) {
+  const post = allPosts.find(p => p.id === id);
+  if (!post) return;
+  const newViews = (post.views || 0) + 1;
+  await supabaseClient.from("posts").update({ views: newViews }).eq("id", id);
+  post.views = newViews;
+  // Update display
+  const el = document.getElementById(`views-${id}`);
+  if (el) el.textContent = newViews;
+}
+
+/* ── LIKES ── */
+async function toggleLike(id) {
+  if (!currentUser) return alert("Loghează-te pentru a da like!");
+
+  const key = `liked_${id}`;
+  const liked = localStorage.getItem(key);
+
+  const post = allPosts.find(p => p.id === id);
+  if (!post) return;
+
+  const newLikes = liked
+    ? Math.max(0, (post.likes || 0) - 1)
+    : (post.likes || 0) + 1;
+
+  await supabaseClient.from("posts").update({ likes: newLikes }).eq("id", id);
+  post.likes = newLikes;
+
+  if (liked) {
+    localStorage.removeItem(key);
+  } else {
+    localStorage.setItem(key, "1");
+  }
+
+  // Update btn
+  const btn = document.getElementById(`like-btn-${id}`);
+  const count = document.getElementById(`like-count-${id}`);
+  if (btn) btn.classList.toggle("liked", !liked);
+  if (count) count.textContent = newLikes;
+}
+
+/* ── COMMENTS ── */
+async function openComments(postId, postTitle) {
+  activeCommentPostId = postId;
+  document.getElementById("commentsPanelTitle").textContent = `💬 ${postTitle}`;
+  document.getElementById("commentsOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  await incrementViews(postId);
+  await loadComments(postId);
+}
+
+function closeComments(e) {
+  if (e && e.target !== document.getElementById("commentsOverlay")) return;
+  document.getElementById("commentsOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+  activeCommentPostId = null;
+}
+
+async function loadComments(postId) {
+  const list = document.getElementById("commentsList");
+  list.innerHTML = `<div class="comment-empty">Se încarcă...</div>`;
+
+  const { data, error } = await supabaseClient
+    .from("comments")
+    .select("*")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+
+  list.innerHTML = "";
+
+  if (error || !data || data.length === 0) {
+    list.innerHTML = `<div class="comment-empty">Niciun comentariu încă. Fii primul! ✦</div>`;
+  } else {
+    data.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "comment-item";
+      div.innerHTML = `
+        <div class="comment-author">✦ ${c.author_email || "Anonim"}</div>
+        <div class="comment-text">${escapeHtml(c.content)}</div>
+        <div class="comment-date">${formatDate(c.created_at)}</div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  // Show input or login prompt
+  if (currentUser) {
+    document.getElementById("commentInputArea").style.display = "flex";
+    document.getElementById("commentLoginPrompt").style.display = "none";
+  } else {
+    document.getElementById("commentInputArea").style.display = "none";
+    document.getElementById("commentLoginPrompt").style.display = "block";
+  }
+}
+
+async function adaugaComment() {
+  if (!currentUser || !activeCommentPostId) return;
+  const content = document.getElementById("newComment").value.trim();
+  if (!content) return;
+
+  const { error } = await supabaseClient.from("comments").insert([{
+    post_id: activeCommentPostId,
+    user_id: currentUser.id,
+    author_email: currentUser.email,
+    content
+  }]);
+
+  if (!error) {
+    document.getElementById("newComment").value = "";
+    await loadComments(activeCommentPostId);
+  } else {
+    console.error(error);
+    alert("Eroare la comentariu. Verifică tabelul 'comments' în Supabase.");
+  }
+}
+
+/* ── LOAD ── */
+async function incarcaPostari() {
+  const { data } = await supabaseClient
+    .from("posts")
+    .select("*")
+    .order("id", { ascending: false });
+
+  allPosts = data || [];
+  afiseazaGrupat(filterPosts(allPosts));
+
+  // Update widgets
+  afiseazaVerset();
+  afiseazaLatest(allPosts);
+  afiseazaTop(allPosts);
+}
+
+function filterPosts(posts) {
+  if (currentFilter === "poezii") return posts.filter(p => p.type === "poezie");
+  if (currentFilter === "cantece") return posts.filter(p => p.type === "cantec");
+  return posts;
+}
+
+/* ── DISPLAY GROUPED BY AUTHOR ── */
+function afiseazaGrupat(posts) {
+  const container = document.getElementById("posts");
+  container.innerHTML = "";
+
+  if (posts.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);font-size:1rem;">Nicio resursă găsită ✦</div>`;
+    return;
+  }
+
+  // Group by author
+  const groups = {};
+  posts.forEach(p => {
+    const key = p.author || "Anonim";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+
+  Object.entries(groups).forEach(([author, groupPosts]) => {
+    const groupDiv = document.createElement("div");
+    groupDiv.className = "author-group";
+
+    const initials = author.charAt(0).toUpperCase();
+    const totalLikes = groupPosts.reduce((s, p) => s + (p.likes || 0), 0);
+
+    // Header
+    const header = document.createElement("div");
+    header.className = "author-group-header";
+    header.innerHTML = `
+      <div class="author-avatar-sm">${initials}</div>
+      <div class="author-group-info">
+        <div class="author-group-name">✍️ ${escapeHtml(author)}</div>
+        <div class="author-group-meta">${groupPosts.length} resurse · ♥ ${totalLikes} aprecieri</div>
+      </div>
+      <span class="author-group-chevron">▼</span>
+    `;
+
+    // Posts container
+    const postsDiv = document.createElement("div");
+    postsDiv.className = "author-group-posts";
+
+    groupPosts.forEach(p => {
+      postsDiv.appendChild(buildPostEl(p));
+    });
+
+    // Toggle
+    header.addEventListener("click", () => {
+      const isOpen = postsDiv.classList.contains("open");
+      postsDiv.classList.toggle("open");
+      header.classList.toggle("open", !isOpen);
+      header.querySelector(".author-group-chevron").classList.toggle("open", !isOpen);
+    });
+
+    // Open first group by default
+    if (Object.keys(groups).indexOf(author) === 0) {
+      postsDiv.classList.add("open");
+      header.classList.add("open");
+      header.querySelector(".author-group-chevron").classList.add("open");
+    }
+
+    groupDiv.appendChild(header);
+    groupDiv.appendChild(postsDiv);
+    container.appendChild(groupDiv);
+  });
+}
+
+function buildPostEl(p) {
+  const isOwner = currentUser && p.user_id === currentUser.id;
+  const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+  const liked = localStorage.getItem(`liked_${p.id}`);
+  const badgeClass = p.type === "cantec" ? "cantec" : "";
+  const typeLabel = p.type === "cantec" ? "🎵 Cântec" : "📜 Poezie";
+
+  const div = document.createElement("div");
+  div.className = "post";
+
+  div.innerHTML = `
+    <!-- VIEW MODE -->
+    <div id="view-${p.id}">
+      <div class="post-type-badge ${badgeClass}">${typeLabel}</div>
+      <div class="post-title">${escapeHtml(p.title)}</div>
+      <div class="post-meta">
+        <span>📅 ${formatDate(p.created_at)}</span>
+        <span>👁 <span id="views-${p.id}">${p.views || 0}</span></span>
+        <span>♥ <span id="like-count-display-${p.id}">${p.likes || 0}</span></span>
+      </div>
+      <div class="post-content">${escapeHtml(p.content)}</div>
+      <div class="post-actions">
+        <button class="action-btn ${liked ? 'liked' : ''}" id="like-btn-${p.id}" onclick="toggleLike('${p.id}')">
+          <span class="btn-icon">♥</span> <span id="like-count-${p.id}">${p.likes || 0}</span>
+        </button>
+        <button class="action-btn" onclick="openComments('${p.id}', ${JSON.stringify(escapeHtml(p.title))})">
+          <span class="btn-icon">💬</span> Comentarii
+        </button>
+        ${(isOwner || isAdmin) ? `
+          <button class="action-btn edit-btn" onclick="startEdit('${p.id}')">
+            <span class="btn-icon">✏️</span> Edit
+          </button>
+          <button class="action-btn delete-btn" onclick="deletePost('${p.id}')">
+            <span class="btn-icon">🗑</span> Șterge
+          </button>
+        ` : ""}
+      </div>
+    </div>
+
+    <!-- EDIT MODE -->
+    <div id="edit-${p.id}" style="display:none;" class="edit-form">
+      <input id="edit-title-${p.id}" class="field" value="${escapeHtmlAttr(p.title)}" placeholder="Titlu">
+      <textarea id="edit-content-${p.id}" class="field" rows="6" placeholder="Conținut">${escapeHtml(p.content)}</textarea>
+
+```
+  <select id="edit-type-${p.id}" class="field">
+    <option value="poezie" ${p.type === 'poezie' ? 'selected' : ''}>📜 Poezie</option>
+    <option value="cantec" ${p.type === 'cantec' ? 'selected' : ''}>🎵 Cântec</option>
+  </select>
+  <div class="post-actions">
+    <button class="btn-primary" onclick="saveEdit('${p.id}')">💾 Salvează</button>
+    <button class="btn-secondary" onclick="cancelEdit('${p.id}')">Anulează</button>
+  </div>
+</div>
+```
+
+`;
+
+return div;
+}
+
+/* ── NAV ── */
+function setNav(btn, filter) {
+document.querySelectorAll(”.nav-btn”).forEach(b => b.classList.remove(“active”));
+btn.classList.add(“active”);
+currentFilter = filter;
+document.getElementById(“formSection”).style.display = “none”;
+
+if (filter === “termeni”) {
+document.getElementById(“legalSection”).style.display = “block”;
+document.getElementById(“posts”).style.display = “none”;
+toggleWidgets(false);
+} else {
+document.getElementById(“legalSection”).style.display = “none”;
+document.getElementById(“posts”).style.display = “block”;
+toggleWidgets(filter === “toate”);
+afiseazaGrupat(filterPosts(allPosts));
+}
+}
+
+/* ── SEARCH ── */
+function searchPosts() {
+const val = document.getElementById(“search”).value.toLowerCase();
+const filtered = filterPosts(allPosts).filter(p =>
+p.title.toLowerCase().includes(val) ||
+(p.content && p.content.toLowerCase().includes(val)) ||
+(p.author && p.author.toLowerCase().includes(val))
+);
+afiseazaGrupat(filtered);
+}
+
+/* ── HELPERS ── */
+function escapeHtml(str) {
+if (!str) return “”;
+return String(str)
+.replace(/&/g, “&”)
+.replace(/</g, “<”)
+.replace(/>/g, “>”)
+.replace(/”/g, “"”);
+}
+
+function escapeHtmlAttr(str) {
+if (!str) return “”;
+return String(str).replace(/”/g, “"”).replace(/’/g, “'”);
+}
+
+function formatDate(iso) {
+if (!iso) return “”;
+const d = new Date(iso);
+return d.toLocaleDateString(“ro-RO”, { day: “2-digit”, month: “short”, year: “numeric” });
+}
+
+/* ════════════════════════════════════════
+WIDGETS
+════════════════════════════════════════ */
+
+/* ── VERSET ZILNIC ── */
+const VERSETE = [
+{ text: “Căci Dumnezeu atât de mult a iubit lumea, că a dat pe singurul Lui Fiu, pentru ca oricine crede în El să nu piară, ci să aibă viață veșnică.”, ref: “Ioan 3:16” },
+{ text: “Eu sunt calea, adevărul și viața. Nimeni nu vine la Tatăl decât prin Mine.”, ref: “Ioan 14:6” },
+{ text: “Domnul este păstorul meu: nu voi duce lipsă de nimic.”, ref: “Psalmul 23:1” },
+{ text: “Puteți face totul prin Hristos care vă întărește.”, ref: “Filipeni 4:13” },
+{ text: “Fiți tari și îmbărbătați-vă! Nu vă temeți și nu vă înspăimântați de ei, căci Domnul Dumnezeul vostru merge cu voi.”, ref: “Deuteronom 31:6” },
+{ text: “Veniți la Mine toți cei trudiți și împovărați și Eu vă voi da odihnă.”, ref: “Matei 11:28” },
+{ text: “Nădăjduiește în Domnul din toată inima ta și nu te bizui pe înțelepciunea ta!”, ref: “Proverbe 3:5” },
+{ text: “Cel ce locuiește sub ocrotirea Celui Preaînalt și se odihnește la umbra Celui Atotputernic.”, ref: “Psalmul 91:1” },
+{ text: “Dumnezeul nostru este refugiul și tăria noastră, un ajutor care nu lipsește niciodată în necaz.”, ref: “Psalmul 46:1” },
+{ text: “Căutați mai întâi Împărăția lui Dumnezeu și neprihănirea Lui și toate aceste lucruri vi se vor da pe deasupra.”, ref: “Matei 6:33” },
+{ text: “Și știm că toate lucrurile lucrează împreună spre binele celor ce iubesc pe Dumnezeu.”, ref: “Romani 8:28” },
+{ text: “Fii fără teamă, căci Eu sunt cu tine; nu te uita cu îngrijorare, căci Eu sunt Dumnezeul tău.”, ref: “Isaia 41:10” },
+{ text: “Bucurați-vă totdeauna în Domnul! Iarăși zic: Bucurați-vă!”, ref: “Filipeni 4:4” },
+{ text: “Cuvântul Tău este o candelă pentru picioarele mele și o lumină pe cărarea mea.”, ref: “Psalmul 119:105” },
+{ text: “Domnul să te binecuvânteze și să te păzească!”, ref: “Numeri 6:24” },
+{ text: “Iubiți-vă unii pe alții cum v-am iubit Eu.”, ref: “Ioan 15:12” },
+{ text: “Harul Domnului nostru Isus Hristos să fie cu voi cu toți!”, ref: “Apocalipsa 22:21” },
+{ text: “Fiți smeriți unii față de alții, căci Dumnezeu rezistă celor mândri, dar dă har celor smeriți.”, ref: “1 Petru 5:5” },
+{ text: “Nu vă lăsați biruiți de rău, ci biruiți răul prin bine.”, ref: “Romani 12:21” },
+{ text: “Dragostea să fie fără prefăcătorie. Urâți răul și alipiți-vă de bine.”, ref: “Romani 12:9” },
+{ text: “Eu am venit ca oile să aibă viață și s-o aibă din belșug.”, ref: “Ioan 10:10” },
+{ text: “Cel ce vine la Mine nu-l voi izgoni afară.”, ref: “Ioan 6:37” },
+{ text: “Pacea pe care v-o dau Eu nu este ca aceea pe care o dă lumea.”, ref: “Ioan 14:27” },
+{ text: “Doamne, Tu ești scutul meu, slava mea, și Cel ce-mi ridici capul.”, ref: “Psalmul 3:3” },
+{ text: “Lucrarea mâinilor noastre, întărește-o; da, întărește lucrarea mâinilor noastre!”, ref: “Psalmul 90:17” },
+{ text: “Iată, Eu stau la ușă și bat. Dacă aude cineva glasul Meu și deschide ușa, voi intra la el.”, ref: “Apocalipsa 3:20” },
+{ text: “Dați mulțumiri în toate împrejurările, căci aceasta este voia lui Dumnezeu pentru voi.”, ref: “1 Tesaloniceni 5:18” },
+{ text: “Dumnezeu este duh și cei ce I se închină trebuie să I se închine în duh și în adevăr.”, ref: “Ioan 4:24” },
+{ text: “Credinița este o încredere neclintită în lucrurile nădăjduite, o puternică convingere despre lucrurile care nu se văd.”, ref: “Evrei 11:1” },
+{ text: “Sfințiți pe Hristos ca Domn în inimile voastre și fiți gata totdeauna să dați un răspuns oricui vă cere socoteală.”, ref: “1 Petru 3:15” },
+{ text: “Lumina strălucea în întuneric și întunericul n-a biruit-o.”, ref: “Ioan 1:5” },
+];
+
+function afiseazaVerset() {
+// Same verse all day — seed by date so it changes daily
+const today = new Date();
+const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+const idx = seed % VERSETE.length;
+const v = VERSETE[idx];
+
+const textEl = document.getElementById(“verseText”);
+const refEl  = document.getElementById(“verseRef”);
+if (!textEl) return;
+
+textEl.classList.add(“fade”);
+setTimeout(() => {
+textEl.textContent = v.text;
+refEl.textContent  = “— “ + v.ref;
+textEl.classList.remove(“fade”);
+}, 400);
+}
+
+/* ── ULTIMELE RESURSE ── */
+function afiseazaLatest(posts) {
+const el = document.getElementById(“latestList”);
+if (!el) return;
+
+const latest = […posts]
+.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+.slice(0, 6);
+
+if (latest.length === 0) {
+el.innerHTML = `<div class="widget-loading">Nicio resursă încă.</div>`;
+return;
+}
+
+el.innerHTML = latest.map(p => `<div class="latest-item" onclick="scrollToPost('${p.id}')"> <div class="latest-item-title">${escapeHtml(p.title)}</div> <div class="latest-item-meta"> <span class="latest-badge ${p.type === 'cantec' ? 'cantec' : ''}">${p.type === 'cantec' ? '🎵' : '📜'} ${p.type}</span> <span>${formatDate(p.created_at)}</span> </div> </div>`).join(””);
+}
+
+function scrollToPost(id) {
+// Switch to home filter first
+const homeBtn = document.querySelector(’.nav-btn[onclick*=“toate”]’);
+if (homeBtn) setNav(homeBtn, “toate”);
+
+// Scroll to post
+setTimeout(() => {
+const el = document.getElementById(`view-${id}`);
+if (el) {
+el.scrollIntoView({ behavior: “smooth”, block: “center” });
+el.closest(”.post”).style.background = “rgba(244,114,182,0.12)”;
+setTimeout(() => { if (el.closest(”.post”)) el.closest(”.post”).style.background = “”; }, 1800);
+}
+}, 300);
+}
+
+/* ── TOP CONTRIBUTORI ── */
+function afiseazaTop(posts) {
+const el = document.getElementById(“topList”);
+if (!el) return;
+
+// Count posts per author
+const counts = {};
+posts.forEach(p => {
+const key = p.author || “Anonim”;
+counts[key] = (counts[key] || 0) + 1;
+});
+
+const sorted = Object.entries(counts)
+.sort((a, b) => b[1] - a[1])
+.slice(0, 10);
+
+if (sorted.length === 0) {
+el.innerHTML = `<div class="widget-loading">Niciun contributor încă.</div>`;
+return;
+}
+
+const medals = [“gold”, “silver”, “bronze”];
+const rankSymbols = [“🥇”, “🥈”, “🥉”];
+
+el.innerHTML = sorted.map(([author, count], i) => {
+const rankClass = medals[i] || “”;
+const rankLabel = i < 3 ? rankSymbols[i] : `#${i + 1}`;
+const initial = author.charAt(0).toUpperCase();
+return `<div class="top-item"> <div class="top-rank ${rankClass}">${rankLabel}</div> <div class="top-avatar">${initial}</div> <div class="top-info"> <div class="top-name">${escapeHtml(author)}</div> <div class="top-count">${count} resurse publicate</div> </div> </div>`;
+}).join(””);
+}
+
+/* ── HIDE WIDGETS ON NON-HOME TABS ── */
+// This is called from setNav — show widgets only on home
+function toggleWidgets(show) {
+const w = document.getElementById(“homepageWidgets”);
+if (w) w.style.display = show ? “block” : “none”;
+}
+
+</script>
 </body>
 </html>
