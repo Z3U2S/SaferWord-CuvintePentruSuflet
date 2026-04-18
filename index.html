@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SaferWord</title>
+<title>SaferWord v2 Final</title>
 <link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500&family=Lora:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -17,6 +17,7 @@
   <div class="navbar-right">
     <span id="userDisplay"></span>
     <button class="btn-admin-nav" id="adminNavBtn" onclick="toggleAdminPanel()" style="display:none;">⚙️ Admin</button>
+    <button class="btn-profile-nav" id="profileNavBtn" onclick="openProfileModal()" style="display:none;">👤 Profil</button>
     <button class="btn-login-nav" id="loginNavBtn" onclick="toggleModal('loginModal')">Login</button>
     <button class="btn-logout-nav" id="logoutNavBtn" onclick="logout()" style="display:none;">Logout</button>
   </div>
@@ -42,6 +43,88 @@
   </div>
 </div>
 
+<!-- MODAL TERMENI -->
+<div class="modal-overlay" id="termsModal" onclick="closeModalOutside(event, 'termsModal')">
+  <div class="modal-box modal-box--wide">
+    <button class="modal-close" onclick="toggleModal('termsModal')">✕</button>
+    <h2>📋 Termeni și Condiții</h2>
+    <div id="termsContent" class="terms-scroll"></div>
+  </div>
+</div>
+
+<!-- MODAL SIGNUP CU TERMENI -->
+<div class="modal-overlay" id="signupTermsModal" onclick="closeModalOutside(event, 'signupTermsModal')">
+  <div class="modal-box modal-box--wide">
+    <h2>📋 Termeni și Condiții - Înregistrare</h2>
+    <div id="signupTermsContent" class="terms-scroll"></div>
+    <label class="terms-checkbox">
+      <input type="checkbox" id="signupTermsCheckbox" />
+      <span>Sunt de acord cu Termenii și Condițiile</span>
+    </label>
+    <button class="btn-primary" id="signupAcceptBtn" onclick="completeSignup()" disabled>Acceptă și creează cont</button>
+  </div>
+</div>
+
+<!-- MODAL PROFIL -->
+<div class="modal-overlay" id="profileModal" onclick="closeModalOutside(event, 'profileModal')">
+  <div class="modal-box modal-box--wide">
+    <button class="modal-close" onclick="toggleModal('profileModal')">✕</button>
+    <h2>👤 Profilul tău</h2>
+    <div class="profile-form">
+      <input id="profileUsername" placeholder="Nume utilizator" />
+      <input id="profileLocation" placeholder="Locație" />
+      <textarea id="profileBio" placeholder="Bio..."></textarea>
+      <select id="profileSex">
+        <option value="">Selectează genul</option>
+        <option value="M">Bărbat</option>
+        <option value="F">Femeie</option>
+        <option value="Other">Altul</option>
+        <option value="Prefer not to say">Prefer să nu spun</option>
+      </select>
+      <input id="profileAge" type="number" min="13" max="120" placeholder="Vârsta" />
+      <label class="profile-privacy">
+        <input type="checkbox" id="profilePublic" checked />
+        <span>🌍 Profilul meu este public</span>
+      </label>
+      <button class="btn-primary" onclick="saveProfile()">Salvează profil</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AUTOR PROFIL -->
+<div class="modal-overlay" id="authorModal" onclick="closeModalOutside(event, 'authorModal')">
+  <div class="modal-box modal-box--wide">
+    <button class="modal-close" onclick="toggleModal('authorModal')">✕</button>
+    <div id="authorContent" class="author-profile-view"></div>
+  </div>
+</div>
+
+<!-- MODAL READER (citire resursă) -->
+<div class="modal-overlay" id="readerModal" onclick="closeModalOutside(event, 'readerModal')">
+  <div class="modal-box modal-box--reader" id="readerBox">
+    <button class="modal-close" onclick="toggleModal('readerModal')">✕</button>
+    <div class="reader-header">
+      <h2 id="readerTitle"></h2>
+      <small id="readerMeta"></small>
+      <div class="reader-toolbar">
+        <div class="reader-font-control">
+          <label>Mărimea text:</label>
+          <input type="range" id="fontSizeSlider" min="14" max="26" value="18" step="1" />
+          <span id="fontSizeValue">18</span>px
+        </div>
+        <div class="reader-theme-control">
+          <label>Temă:</label>
+          <button class="theme-btn active" onclick="setReaderTheme('light')" title="Luminos">📄</button>
+          <button class="theme-btn" onclick="setReaderTheme('sepia')" title="Sepia">🟫</button>
+          <button class="theme-btn" onclick="setReaderTheme('dark')" title="Dark">🌙</button>
+          <button class="theme-btn" onclick="setReaderTheme('green')" title="Green">🌿</button>
+        </div>
+      </div>
+    </div>
+    <div id="readerContent" class="reader-content"></div>
+  </div>
+</div>
+
 <!-- MODAL COMENTARII -->
 <div class="modal-overlay" id="commentModal" onclick="closeModalOutside(event, 'commentModal')">
   <div class="modal-box modal-box--wide">
@@ -63,15 +146,31 @@
   <div class="modal-box">
     <button class="modal-close" onclick="toggleModal('reportModal')">✕</button>
     <h2>Raportează postarea</h2>
-    <p style="font-size:13px; color:#888; margin:0 0 8px;">Spune-ne de ce raportezi această postare:</p>
     <div class="report-options">
       <label><input type="radio" name="reportReason" value="Limbaj inadecvat"> Limbaj inadecvat</label>
       <label><input type="radio" name="reportReason" value="Conținut fals"> Conținut fals</label>
       <label><input type="radio" name="reportReason" value="Spam"> Spam</label>
       <label><input type="radio" name="reportReason" value="Alt motiv"> Alt motiv</label>
     </div>
-    <textarea id="reportExtra" placeholder="Detalii suplimentare (opțional)..."></textarea>
+    <textarea id="reportExtra" placeholder="Detalii suplimentare..."></textarea>
     <button class="btn-primary" onclick="submitReport()">Trimite raportul</button>
+  </div>
+</div>
+
+<!-- MODAL EDIT RESURSA -->
+<div class="modal-overlay" id="editResourceModal" onclick="closeModalOutside(event, 'editResourceModal')">
+  <div class="modal-box modal-box--wide">
+    <button class="modal-close" onclick="toggleModal('editResourceModal')">✕</button>
+    <h2>✏️ Editează resursă</h2>
+    <input type="hidden" id="editResourceId" />
+    <input id="editResourceTitle" placeholder="Titlu" />
+    <textarea id="editResourceContent" placeholder="Conținut..." style="min-height: 150px;"></textarea>
+    <select id="editResourceType">
+      <option value="poezie">Poezie</option>
+      <option value="cantec">Cântec</option>
+    </select>
+    <textarea id="editResourceStory" placeholder="Povestea creației (opțional)..."></textarea>
+    <button class="btn-primary" onclick="saveEditedResource()">Salvează modificări</button>
   </div>
 </div>
 
@@ -81,13 +180,35 @@
     <p>Cântece și Poezii Creștine</p>
   </div>
 
-  <!-- PANOU ADMIN -->
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+    <div class="stat-card">
+      <div class="stat-number" id="totalPosts">0</div>
+      <div class="stat-label">Resurse</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="totalAuthors">0</div>
+      <div class="stat-label">Autori</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="totalPoems">0</div>
+      <div class="stat-label">Poezii</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="totalSongs">0</div>
+      <div class="stat-label">Cântece</div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
   <div class="admin-panel" id="adminPanel" style="display:none;">
     <div class="admin-header">
       <h2>⚙️ Panou Admin</h2>
       <div class="admin-tabs">
         <button class="tab-btn active" onclick="switchTab('reported')">🚨 Raportate</button>
         <button class="tab-btn" onclick="switchTab('badwords')">🚫 Cuvinte interzise</button>
+        <button class="tab-btn" onclick="switchTab('resources')">📚 Resurse</button>
+        <button class="tab-btn" onclick="switchTab('authors')">👥 Autori</button>
       </div>
     </div>
     <div id="tab-reported">
@@ -100,20 +221,32 @@
       </div>
       <div id="badwordsList"></div>
     </div>
+    <div id="tab-resources" style="display:none;">
+      <input id="adminSearchResources" placeholder="🔍 Caută resurse..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.08); color:white; font-family:'DM Sans';">
+      <div id="adminResourcesList"><p class="empty-msg">Se încarcă...</p></div>
+    </div>
+    <div id="tab-authors" style="display:none;">
+      <input id="adminSearchAuthors" placeholder="🔍 Caută autori..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.08); color:white; font-family:'DM Sans';">
+      <div id="adminAuthorsList"><p class="empty-msg">Se încarcă...</p></div>
+    </div>
   </div>
 
   <div class="menu">
-    <button onclick="incarcaToate()">🏠 Home</button>
-    <button onclick="incarcaPoezii()">📜 Poezii</button>
-    <button onclick="incarcaCantece()">🎵 Cântece</button>
+    <button onclick="showHome()">🏠 Home</button>
+    <button onclick="showPoems()">📜 Poezii</button>
+    <button onclick="showSongs()">🎵 Cântece</button>
+    <button id="myResourcesBtn" onclick="showMyResources()" style="display:none;">📝 Resursele mele</button>
+    <button onclick="toggleModal('termsModal')">📋 Termeni</button>
   </div>
 
   <input id="search" placeholder="🔍 Caută..." oninput="searchPosts()">
 
   <div class="glass" id="formSection" style="display:none;">
+    <h3>Adaugă o resursă</h3>
     <input id="title" placeholder="Titlu" />
     <input id="author" placeholder="Autor" />
-    <textarea id="content" placeholder="Scrie aici..."></textarea>
+    <textarea id="content" placeholder="Conținutul..."></textarea>
+    <textarea id="creationStory" placeholder="Povestea creației (opțional)..."></textarea>
     <select id="type">
       <option value="poezie">Poezie</option>
       <option value="cantec">Cântec</option>
@@ -121,7 +254,7 @@
     <button onclick="adaugaPost()">Publică</button>
   </div>
 
-  <div id="posts"></div>
+  <div id="posts" class="authors-grid"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
